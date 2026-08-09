@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+package-lock.json
 venv/
 backend/venv/
 .venv/
@@ -36,3 +37,10 @@ Thumbs.db
 # Temp scratch & internal agent files
 scratch/
 .agents/
+*.db.bak
+*.db
+*.db-shm
+*.db-wal
+*.db-wal
+*.db-shm
+*.db-wal
