@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+venv/
+backend/venv/
+.venv/
+env/
+
+# Production builds
+dist/
+build/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+backend/app/excel_dashboard.db
+backend/excel_dashboard.db
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment & local config
+.env
+.env.local
+.env.*.local
+*.log
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temp scratch & internal agent files
+scratch/
+.agents/
