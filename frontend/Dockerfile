@@ -1,11 +1,12 @@
 # Stage 1: Build static application
+
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source files
 COPY . .
@@ -18,6 +19,7 @@ ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 # Stage 2: Serve static files via Nginx
+
 FROM nginx:alpine
 
 # Copy built dist files
