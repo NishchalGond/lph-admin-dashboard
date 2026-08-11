@@ -150,15 +150,6 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     for ptype, count in prop_type_counts:
         if ptype:
             category_breakdown[ptype] = count
-            
-    if not category_breakdown:
-        category_breakdown = {
-            "Apartments": 852400,
-            "Villas": 320100,
-            "Commercial": 115000,
-            "Townhouses": 54200,
-            "Plots": 33806
-        }
 
     return {
         "total_files": total_files,
@@ -505,33 +496,43 @@ def get_records(
     intent_dict = parse_natural_language_query(search) if search and search.strip() else {}
     has_extra_filters = any([community, developer, property_type, company, category, status, buyer_seller_type, bedroom, batch_number, file_id])
 
+    is_postgres = "postgresql" in str(db.bind.url)
     fts_expr = None
+
     if search and search.strip():
-        fts_expr = build_fts_expression(search.strip())
-        if fts_expr:
+        s = f"%{search.strip()}%"
+        if is_postgres:
             query = query.filter(
-                ConsolidatedRecord.id.in_(
-                    text("SELECT id FROM consolidated_records_fts WHERE consolidated_records_fts MATCH :fts_expr")
+                or_(
+                    ConsolidatedRecord.name.ilike(s),
+                    ConsolidatedRecord.community.ilike(s),
+                    ConsolidatedRecord.sub_community.ilike(s),
+                    ConsolidatedRecord.building_cluster.ilike(s),
+                    ConsolidatedRecord.unit_number.ilike(s),
+                    ConsolidatedRecord.developer.ilike(s),
+                    ConsolidatedRecord.project.ilike(s),
+                    ConsolidatedRecord.plot_reg_no.ilike(s),
+                    ConsolidatedRecord.plot_number.ilike(s)
                 )
-            ).params(fts_expr=fts_expr)
+            )
+        else:
+            fts_expr = build_fts_expression(search.strip())
+            if fts_expr:
+                query = query.filter(
+                    ConsolidatedRecord.id.in_(
+                        text("SELECT id FROM consolidated_records_fts WHERE consolidated_records_fts MATCH :fts_expr")
+                    )
+                ).params(fts_expr=fts_expr)
 
     if community:
         comm = community.strip()
-        comm_fts = build_fts_expression(comm)
-        if comm_fts and not search:
-            query = query.filter(
-                ConsolidatedRecord.id.in_(
-                    text("SELECT id FROM consolidated_records_fts WHERE consolidated_records_fts MATCH :comm_fts")
-                )
-            ).params(comm_fts=comm_fts)
-        else:
-            query = query.filter(or_(
-                ConsolidatedRecord.community.ilike(f"%{comm}%"),
-                ConsolidatedRecord.sub_community.ilike(f"%{comm}%"),
-                ConsolidatedRecord.building_cluster.ilike(f"%{comm}%"),
-                ConsolidatedRecord.project.ilike(f"%{comm}%"),
-                ConsolidatedRecord.original_workbook.ilike(f"%{comm}%")
-            ))
+        query = query.filter(or_(
+            ConsolidatedRecord.community.ilike(f"%{comm}%"),
+            ConsolidatedRecord.sub_community.ilike(f"%{comm}%"),
+            ConsolidatedRecord.building_cluster.ilike(f"%{comm}%"),
+            ConsolidatedRecord.project.ilike(f"%{comm}%"),
+            ConsolidatedRecord.original_workbook.ilike(f"%{comm}%")
+        ))
     if developer:
         dev = developer.strip()
         query = query.filter(or_(
@@ -557,14 +558,7 @@ def get_records(
     if file_id:
         query = query.filter(ConsolidatedRecord.source_file_id == file_id)
 
-    # Fast total count calculation
-    if search and search.strip() and fts_expr and not has_extra_filters:
-        total = db.execute(
-            text("SELECT count(*) FROM consolidated_records_fts WHERE consolidated_records_fts MATCH :fts_expr"),
-            {"fts_expr": fts_expr}
-        ).scalar() or 0
-    else:
-        total = query.count()
+    total = query.count()
 
     # Exact-match priority ranking when search query is present
     if search and search.strip():

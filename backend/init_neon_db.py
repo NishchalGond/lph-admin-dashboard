@@ -6,52 +6,37 @@ from app.db.models import User, BatchInfo, SourceFile, ConsolidatedRecord, Proce
 def get_password_hash(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
-def reset_db():
-    print("Clearing all data tables on Easypanel PostgreSQL (batches, files, records, logs, workflow runs)...")
-    db = SessionLocal()
+def init_neon_database():
+    print("Connecting to Neon PostgreSQL database...")
+    print(f"Engine URL: {engine.url.render_as_string(hide_password=True)}")
     
-    try:
-        # Truncate all data tables using PostgreSQL CASCADE (preserves schema)
-        db.execute(text("""
-            TRUNCATE TABLE 
-                consolidated_records, 
-                processing_logs, 
-                duplicate_records, 
-                workflow_steps, 
-                workflow_runs, 
-                source_files, 
-                batch_info 
-            RESTART IDENTITY CASCADE;
-        """))
-        db.commit()
-        print("[OK] All data tables cleared successfully via PostgreSQL TRUNCATE CASCADE!")
+    # 1. Recreate all tables defined in SQLAlchemy models
+    print("Recreating tables on Easypanel PostgreSQL...")
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    print("[OK] All tables created successfully!")
 
-        # Recreate pg_trgm GIN index for fast full-text search
-        print("Recreating pg_trgm GIN index for fast search...")
+    # Enable pg_trgm for fast text search
+    db = SessionLocal()
+    try:
+        print("Enabling pg_trgm extension and creating GIN index for fast search...")
         db.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
-        db.execute(text("DROP INDEX IF EXISTS idx_consolidated_trgm;"))
         db.execute(text("""
-            CREATE INDEX idx_consolidated_trgm 
+            CREATE INDEX IF NOT EXISTS idx_consolidated_trgm 
             ON consolidated_records 
             USING gin (
                 (COALESCE(name, '') || ' ' || COALESCE(community, '') || ' ' || COALESCE(building_cluster, '') || ' ' || COALESCE(developer, '') || ' ' || COALESCE(unit_number, '')) gin_trgm_ops
             );
         """))
         db.commit()
-        print("[OK] pg_trgm GIN index recreated!")
-
-    except Exception as e:
+        print("[OK] GIN trigram index created successfully!")
+    except Exception as ex:
         db.rollback()
-        print(f"[NOTE] Truncate failed, recreating tables from scratch: {e}")
-        Base.metadata.drop_all(bind=engine)
-        Base.metadata.create_all(bind=engine)
-        print("[OK] Tables recreated clean on PostgreSQL!")
-
+        print(f"[NOTE] Trigram index note: {ex}")
     try:
-        # Ensure essential user accounts exist
         user_count = db.query(User).count()
         if user_count == 0:
-            print("Re-creating standard user accounts...")
+            print("Seeding standard user accounts...")
             admin_user = User(
                 username="admin",
                 email="admin@enterprise.com",
@@ -82,10 +67,9 @@ def reset_db():
             )
             db.add_all([admin_user, ceo_user, marketing_user, dev_user])
             db.commit()
-            print("[OK] Standard user accounts created.")
+            print("[OK] Standard user accounts created on Neon PostgreSQL!")
         else:
-            print(f"[OK] Preserved {user_count} existing user account(s).")
-            
+            print(f"[OK] Found {user_count} existing user account(s) in Neon database.")
     except Exception as e:
         db.rollback()
         print(f"[ERROR] Error during user seeding: {e}")
@@ -93,4 +77,4 @@ def reset_db():
         db.close()
 
 if __name__ == "__main__":
-    reset_db()
+    init_neon_database()

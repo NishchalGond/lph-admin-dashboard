@@ -125,37 +125,18 @@ const Analytics = () => {
   if (loading) return <AnalyticsSkeleton />;
   if (error) return <div className="p-6"><ErrorState message={error} onRetry={fetchAnalytics} /></div>;
 
-  const batchThroughput = data?.batch_throughput?.length ? data.batch_throughput : [
-    { batch: 'Batch 1', records: 124000, time_sec: 4.2, files: 12 },
-    { batch: 'Batch 2', records: 280000, time_sec: 8.5, files: 24 },
-    { batch: 'Batch 3', records: 410000, time_sec: 12.1, files: 36 },
-    { batch: 'Batch 4', records: 560000, time_sec: 16.4, files: 48 },
-    { batch: 'Batch 5', records: 1375506, time_sec: 24.8, files: 50 },
-  ];
-
-  const directoryStats = data?.directory_stats?.length ? data.directory_stats : [
-    { directory: 'Downtown Dubai', files: 18 },
-    { directory: 'Dubai Hills Estate', files: 14 },
-    { directory: 'Dubai Creek', files: 12 },
-    { directory: 'Business Bay', files: 8 },
-    { directory: 'Palm Jumeirah', files: 6 },
-  ];
-
-  const extensionStats = data?.extension_stats?.length ? data.extension_stats : [
-    { extension: '.xlsx (Excel Workbook)', count: 38 },
-    { extension: '.xls (Legacy Excel)', count: 8 },
-    { extension: '.csv (Delimited)', count: 4 },
-  ];
-
-  const duplicateRatio = data?.duplicate_ratio?.length ? data.duplicate_ratio : [
-    { name: 'Unique Files', value: 466 },
-    { name: 'Duplicate Files', value: 34 },
+  const batchThroughput = data?.batch_throughput || [];
+  const directoryStats = data?.directory_stats || [];
+  const extensionStats = data?.extension_stats || [];
+  const duplicateRatio = data?.duplicate_ratio || [
+    { name: 'Unique Files', value: 0 },
+    { name: 'Duplicate Files', value: 0 },
   ];
 
   const totalRecords = batchThroughput.reduce((s, b) => s + (b.records || 0), 0);
   const totalBatches = batchThroughput.length;
-  const uniqueFiles  = duplicateRatio.find(d => d.name.includes('Unique'))?.value || 466;
-  const dupFiles     = duplicateRatio.find(d => d.name.includes('Duplicate'))?.value || 34;
+  const uniqueFiles  = duplicateRatio.find(d => d.name.includes('Unique'))?.value || 0;
+  const dupFiles     = duplicateRatio.find(d => d.name.includes('Duplicate'))?.value || 0;
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto page-enter">
