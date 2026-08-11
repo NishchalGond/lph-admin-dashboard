@@ -219,23 +219,9 @@ def global_search(
                 ConsolidatedRecord.customer_name.ilike(query_str)
             ))
     else:
-        # Filter text and contact columns at database level
-        digits_only = re.sub(r'\D', '', query_clean)
-        phone_filters = []
-        if len(digits_only) >= 5:
-            d_pat = f"%{digits_only}%"
-            last_9 = f"%{digits_only[-9:]}%" if len(digits_only) >= 9 else d_pat
-            phone_filters.extend([
-                ConsolidatedRecord.mobile_1.ilike(d_pat),
-                ConsolidatedRecord.mobile_2.ilike(d_pat),
-                ConsolidatedRecord.mobile_3.ilike(d_pat),
-                ConsolidatedRecord.mobile_1.ilike(last_9),
-                ConsolidatedRecord.mobile_2.ilike(last_9),
-                ConsolidatedRecord.mobile_3.ilike(last_9),
-                ConsolidatedRecord.pi_number.ilike(d_pat),
-            ])
-
-        global_clauses = [
+        # Filter primary text and contact columns with phone digit normalization
+        digits = re.sub(r'\D', '', query_clean)
+        phone_clauses = [
             ConsolidatedRecord.community.ilike(query_str),
             ConsolidatedRecord.building_cluster.ilike(query_str),
             ConsolidatedRecord.name.ilike(query_str),
@@ -247,13 +233,24 @@ def global_search(
             ConsolidatedRecord.mobile_2.ilike(query_str),
             ConsolidatedRecord.mobile_3.ilike(query_str),
             ConsolidatedRecord.email_address.ilike(query_str),
-            ConsolidatedRecord.pi_number.ilike(query_str),
-            ConsolidatedRecord.dmno.ilike(query_str),
-        ] + phone_filters
+            ConsolidatedRecord.pi_number.ilike(query_str)
+        ]
+        if len(digits) >= 5:
+            phone_variants = [digits]
+            if digits.startswith("971") and len(digits) > 5:
+                phone_variants.append(digits[3:])
+            elif digits.startswith("0") and len(digits) > 5:
+                phone_variants.append(digits[1:])
+            for pv in phone_variants:
+                pv_pat = f"%{pv}%"
+                phone_clauses.extend([
+                    ConsolidatedRecord.mobile_1.ilike(pv_pat),
+                    ConsolidatedRecord.mobile_2.ilike(pv_pat),
+                    ConsolidatedRecord.mobile_3.ilike(pv_pat)
+                ])
+        records_query = records_query.filter(or_(*phone_clauses))
 
-        records_query = records_query.filter(or_(*global_clauses))
-
-    # Execute offset and limit down in SQLite for fast < 0.2s response
+    # Execute offset and limit down for fast response
     matching_records = records_query.offset((page - 1) * page_size).limit(page_size).all()
     records_total = (page - 1) * page_size + len(matching_records)
 
@@ -491,6 +488,35 @@ def build_fts_expression(search_str: str) -> str:
     return " AND ".join([f'"{t}"*' for t in tokens])
 
 
+@router.get("/records/filter-options")
+def get_filter_options(db: Session = Depends(get_db)):
+    """Fetch distinct communities, developers, and property types from database for dynamic dropdowns."""
+    communities_raw = db.query(ConsolidatedRecord.community).filter(
+        ConsolidatedRecord.community.isnot(None), 
+        ConsolidatedRecord.community != ''
+    ).distinct().order_by(ConsolidatedRecord.community.asc()).all()
+
+    developers_raw = db.query(ConsolidatedRecord.developer).filter(
+        ConsolidatedRecord.developer.isnot(None), 
+        ConsolidatedRecord.developer != ''
+    ).distinct().order_by(ConsolidatedRecord.developer.asc()).all()
+
+    property_types_raw = db.query(ConsolidatedRecord.property_type).filter(
+        ConsolidatedRecord.property_type.isnot(None), 
+        ConsolidatedRecord.property_type != ''
+    ).distinct().order_by(ConsolidatedRecord.property_type.asc()).all()
+
+    def clean_options(raw_list):
+        opts = sorted(list(set(r[0].strip() for r in raw_list if r[0] and len(r[0].strip()) > 1)))
+        return opts
+
+    return {
+        "communities": clean_options(communities_raw),
+        "developers": clean_options(developers_raw),
+        "property_types": clean_options(property_types_raw)
+    }
+
+
 # --------------------------
 # Record Explorer Endpoints
 # --------------------------
@@ -514,96 +540,100 @@ def get_records(
     db: Session = Depends(get_db)
 ):
     query = db.query(ConsolidatedRecord)
-    intent_dict = parse_natural_language_query(search) if search and search.strip() else {}
-    has_extra_filters = any([community, developer, property_type, company, category, status, buyer_seller_type, bedroom, batch_number, file_id])
 
     if search and search.strip():
-        raw_s = search.strip()
-        s_pat = f"%{raw_s}%"
+        term = search.strip()
+        intent_dict = parse_natural_language_query(term)
+        
+        # 1. If NLU extracted structured query entities (e.g. "villa owned by sheikh in damac hills")
+        has_entities = any([
+            intent_dict.get("property_type"),
+            intent_dict.get("community"),
+            intent_dict.get("developer"),
+            intent_dict.get("unit_number"),
+            intent_dict.get("owner_name"),
+            intent_dict.get("nationality")
+        ])
 
-        # Extract pure digit sequence for phone numbers / units / PI numbers
-        digits_only = re.sub(r'\D', '', raw_s)
-        phone_filters = []
-        if len(digits_only) >= 5:
-            d_pat = f"%{digits_only}%"
-            last_9 = f"%{digits_only[-9:]}%" if len(digits_only) >= 9 else d_pat
-            phone_filters.extend([
-                ConsolidatedRecord.mobile_1.ilike(d_pat),
-                ConsolidatedRecord.mobile_2.ilike(d_pat),
-                ConsolidatedRecord.mobile_3.ilike(d_pat),
-                ConsolidatedRecord.mobile_1.ilike(last_9),
-                ConsolidatedRecord.mobile_2.ilike(last_9),
-                ConsolidatedRecord.mobile_3.ilike(last_9),
-                ConsolidatedRecord.pi_number.ilike(d_pat),
-            ])
+        if has_entities:
+            if intent_dict.get("property_type"):
+                query = query.filter(ConsolidatedRecord.property_type.ilike(f"%{intent_dict['property_type']}%"))
+            if intent_dict.get("community"):
+                query = query.filter(ConsolidatedRecord.community.ilike(f"%{intent_dict['community']}%"))
+            if intent_dict.get("developer"):
+                query = query.filter(ConsolidatedRecord.developer.ilike(f"%{intent_dict['developer']}%"))
+            if intent_dict.get("unit_number"):
+                query = query.filter(ConsolidatedRecord.unit_number.ilike(f"%{intent_dict['unit_number']}%"))
+            if intent_dict.get("owner_name"):
+                owner_val = intent_dict["owner_name"].strip()
+                query = query.filter(or_(
+                    ConsolidatedRecord.name.ilike(f"%{owner_val}%"),
+                    ConsolidatedRecord.customer_name.ilike(f"%{owner_val}%")
+                ))
+            if intent_dict.get("nationality"):
+                query = query.filter(ConsolidatedRecord.nationality.ilike(f"%{intent_dict['nationality']}%"))
+        else:
+            # 2. General full-text & phone number search fallback
+            s = f"%{term}%"
+            digits = re.sub(r'\D', '', term)
 
-        search_clauses = [
-            ConsolidatedRecord.name.ilike(s_pat),
-            ConsolidatedRecord.customer_name.ilike(s_pat),
-            ConsolidatedRecord.community.ilike(s_pat),
-            ConsolidatedRecord.sub_community.ilike(s_pat),
-            ConsolidatedRecord.building_cluster.ilike(s_pat),
-            ConsolidatedRecord.unit_number.ilike(s_pat),
-            ConsolidatedRecord.developer.ilike(s_pat),
-            ConsolidatedRecord.project.ilike(s_pat),
-            ConsolidatedRecord.plot_reg_no.ilike(s_pat),
-            ConsolidatedRecord.plot_number.ilike(s_pat),
-            ConsolidatedRecord.mobile_1.ilike(s_pat),
-            ConsolidatedRecord.mobile_2.ilike(s_pat),
-            ConsolidatedRecord.mobile_3.ilike(s_pat),
-            ConsolidatedRecord.email_address.ilike(s_pat),
-            ConsolidatedRecord.pi_number.ilike(s_pat),
-            ConsolidatedRecord.dmno.ilike(s_pat),
-            ConsolidatedRecord.dmsubno.ilike(s_pat),
-        ] + phone_filters
+            search_clauses = [
+                ConsolidatedRecord.name.ilike(s),
+                ConsolidatedRecord.customer_name.ilike(s),
+                ConsolidatedRecord.community.ilike(s),
+                ConsolidatedRecord.sub_community.ilike(s),
+                ConsolidatedRecord.building_cluster.ilike(s),
+                ConsolidatedRecord.unit_number.ilike(s),
+                ConsolidatedRecord.developer.ilike(s),
+                ConsolidatedRecord.project.ilike(s),
+                ConsolidatedRecord.plot_reg_no.ilike(s),
+                ConsolidatedRecord.plot_number.ilike(s),
+                ConsolidatedRecord.dmno.ilike(s),
+                ConsolidatedRecord.dmsubno.ilike(s),
+                ConsolidatedRecord.pi_number.ilike(s),
+                ConsolidatedRecord.email_address.ilike(s),
+                ConsolidatedRecord.mobile_1.ilike(s),
+                ConsolidatedRecord.mobile_2.ilike(s),
+                ConsolidatedRecord.mobile_3.ilike(s),
+                ConsolidatedRecord.original_workbook.ilike(s)
+            ]
 
-        query = query.filter(or_(*search_clauses))
+            if len(digits) >= 5:
+                phone_variants = [digits]
+                if digits.startswith("971") and len(digits) > 5:
+                    phone_variants.append(digits[3:])
+                elif digits.startswith("0") and len(digits) > 5:
+                    phone_variants.append(digits[1:])
 
+                for pv in phone_variants:
+                    pv_pat = f"%{pv}%"
+                    search_clauses.extend([
+                        ConsolidatedRecord.mobile_1.ilike(pv_pat),
+                        ConsolidatedRecord.mobile_2.ilike(pv_pat),
+                        ConsolidatedRecord.mobile_3.ilike(pv_pat),
+                        ConsolidatedRecord.pi_number.ilike(pv_pat)
+                    ])
+
+            query = query.filter(or_(*search_clauses))
+
+    # Strict field focus for Community dropdown filter
     if community:
         comm = community.strip()
-        comm_tokens = [w for w in comm.split() if len(w) > 2]
-        comm_clauses = [
-            ConsolidatedRecord.community.ilike(f"%{comm}%"),
-            ConsolidatedRecord.sub_community.ilike(f"%{comm}%"),
-            ConsolidatedRecord.building_cluster.ilike(f"%{comm}%"),
-            ConsolidatedRecord.project.ilike(f"%{comm}%"),
-            ConsolidatedRecord.original_workbook.ilike(f"%{comm}%")
-        ]
-        for ct in comm_tokens:
-            comm_clauses.append(ConsolidatedRecord.community.ilike(f"%{ct}%"))
-        query = query.filter(or_(*comm_clauses))
+        query = query.filter(ConsolidatedRecord.community.ilike(f"%{comm}%"))
 
+    # Strict field focus for Developer dropdown filter
     if developer:
         dev = developer.strip()
-        # Extract main brand word (e.g. "Emaar Properties" -> "Emaar", "DAMAC Properties" -> "DAMAC")
-        dev_brand = dev.split()[0] if dev else dev
-        dev_clauses = [
-            ConsolidatedRecord.developer.ilike(f"%{dev}%"),
-            ConsolidatedRecord.developer.ilike(f"%{dev_brand}%"),
-            ConsolidatedRecord.building_cluster.ilike(f"%{dev_brand}%"),
-            ConsolidatedRecord.project.ilike(f"%{dev_brand}%"),
-            ConsolidatedRecord.original_workbook.ilike(f"%{dev_brand}%")
-        ]
-        query = query.filter(or_(*dev_clauses))
-
+        # Match primary developer keyword e.g. "Emaar Properties" -> "Emaar"
+        dev_words = [w for w in dev.split() if len(w) > 2 and w.lower() not in ('properties', 'realty', 'development', 'group', 'holding', 'holdings', 'pjsc', 'llc')]
+        dev_term = dev_words[0] if dev_words else dev
+        query = query.filter(ConsolidatedRecord.developer.ilike(f"%{dev_term}%"))
     if property_type:
-        pt = property_type.strip()
-        query = query.filter(or_(
-            ConsolidatedRecord.property_type.ilike(f"%{pt}%"),
-            ConsolidatedRecord.category.ilike(f"%{pt}%")
-        ))
+        query = query.filter(ConsolidatedRecord.property_type.ilike(f"%{property_type.strip()}%"))
     if buyer_seller_type:
-        bs = buyer_seller_type.strip()
-        query = query.filter(or_(
-            ConsolidatedRecord.buyer_seller_type.ilike(f"%{bs}%"),
-            ConsolidatedRecord.status.ilike(f"%{bs}%")
-        ))
+        query = query.filter(ConsolidatedRecord.buyer_seller_type == buyer_seller_type)
     if bedroom:
-        bed = bedroom.strip()
-        query = query.filter(or_(
-            ConsolidatedRecord.bedroom.ilike(f"%{bed}%"),
-            ConsolidatedRecord.bedroom == bed
-        ))
+        query = query.filter(ConsolidatedRecord.bedroom == bedroom)
     if company:
         query = query.filter(ConsolidatedRecord.company == company)
     if category:

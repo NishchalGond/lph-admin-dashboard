@@ -162,22 +162,6 @@ const HeroAISearchBar = ({
         </div>
       </div>
 
-      {/* Quick AI Prompts */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-amber-500" /> Prompts:
-        </span>
-        {QUICK_PROMPTS.map((prompt, idx) => (
-          <button
-            key={idx}
-            onClick={() => { onChange(prompt.value); if (onSearch) onSearch(prompt.value); }}
-            className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100/80 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-900/30 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 border border-slate-200/50 dark:border-slate-700/50 transition-all whitespace-nowrap"
-          >
-            {prompt.label}
-          </button>
-        ))}
-      </div>
-
       {/* Suggestions Popover */}
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden py-1 max-h-72 overflow-y-auto">

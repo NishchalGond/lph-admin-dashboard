@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Filter, X, ChevronDown, Check, RotateCcw, MapPin, Layers, Home, UserCheck, Bed } from 'lucide-react';
+import { Filter, X, ChevronDown, Check, RotateCcw, MapPin, Layers, Home, UserCheck, Bed, Search } from 'lucide-react';
+import { getFilterOptions } from '../../services/api';
 
-const COMMUNITIES = ['MUDON', 'DAMAC HILLS', 'ARABELLA 2', 'DUBAI LAND RESIDENCES', 'TOWN SQUARE', 'DUBAI HILLS', 'DOWNTOWN DUBAI'];
-const DEVELOPERS = ['DAMAC Properties', 'Dubai Properties', 'Emaar Properties', 'Nakheel', 'Sobha Realty', 'Binghatti'];
+const DEFAULT_COMMUNITIES = ['MUDON', 'DAMAC HILLS', 'ARABELLA 2', 'DUBAI LAND RESIDENCES', 'TOWN SQUARE', 'DUBAI HILLS', 'DOWNTOWN DUBAI', 'BUSINESS BAY', 'PALM JUMEIRAH', 'DUBAI MARINA'];
+const DEFAULT_DEVELOPERS = ['DAMAC Properties', 'Dubai Properties', 'Emaar Properties', 'Nakheel', 'Sobha Realty', 'Binghatti', 'Meraas', 'Deyaar'];
 const PROPERTY_TYPES = ['Residential', 'Villa', 'Townhouse', 'Apartment', 'Commercial'];
 const BEDROOMS = ['Studio', '1', '2', '3', '4', '5+'];
 const BUYER_SELLER = ['Buyer', 'Seller'];
@@ -21,6 +22,25 @@ const EnterpriseFilterBar = ({
   const [activeDropdown, setActiveDropdown] = useState(null);
   const dropdownRef = useRef(null);
 
+  // Dynamic filter options state
+  const [communities, setCommunities] = useState(DEFAULT_COMMUNITIES);
+  const [developers, setDevelopers] = useState(DEFAULT_DEVELOPERS);
+
+  // Search inside dropdown filters
+  const [communitySearch, setCommunitySearch] = useState('');
+  const [developerSearch, setDeveloperSearch] = useState('');
+
+  useEffect(() => {
+    getFilterOptions()
+      .then((res) => {
+        if (res.data?.communities?.length > 0) setCommunities(res.data.communities);
+        if (res.data?.developers?.length > 0) setDevelopers(res.data.developers);
+      })
+      .catch(() => {
+        // Fallback to default lists on connection error
+      });
+  }, []);
+
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -30,6 +50,9 @@ const EnterpriseFilterBar = ({
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  const filteredCommunities = communities.filter(c => c.toLowerCase().includes(communitySearch.toLowerCase()));
+  const filteredDevelopers = developers.filter(d => d.toLowerCase().includes(developerSearch.toLowerCase()));
 
   const hasActiveFilters = !!(community || developer || propertyType || bedroom || buyerSeller);
 
@@ -42,7 +65,7 @@ const EnterpriseFilterBar = ({
             <Filter className="w-3.5 h-3.5 text-sky-500" /> Filters:
           </span>
 
-          {/* Community Filter Dropdown */}
+          {/* Dynamic Community Filter Dropdown */}
           <div className="relative">
             <button
               onClick={() => setActiveDropdown(activeDropdown === 'community' ? null : 'community')}
@@ -58,22 +81,38 @@ const EnterpriseFilterBar = ({
             </button>
 
             {activeDropdown === 'community' && (
-              <div className="absolute top-full left-0 mt-1.5 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1 overflow-hidden">
-                {COMMUNITIES.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => { onChangeFilter('community', c === community ? '' : c); setActiveDropdown(null); }}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                  >
-                    <span>{c}</span>
-                    {c === community && <Check className="w-3.5 h-3.5 text-sky-500" />}
-                  </button>
-                ))}
+              <div className="absolute top-full left-0 mt-1.5 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-2 space-y-1">
+                <div className="relative mb-1">
+                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search community..."
+                    value={communitySearch}
+                    onChange={(e) => setCommunitySearch(e.target.value)}
+                    className="w-full pl-8 pr-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg outline-none"
+                  />
+                </div>
+                <div className="max-h-56 overflow-y-auto space-y-0.5 custom-scrollbar">
+                  {filteredCommunities.length === 0 ? (
+                    <div className="p-2 text-[11px] text-slate-400 text-center">No community found</div>
+                  ) : (
+                    filteredCommunities.map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => { onChangeFilter('community', c === community ? '' : c); setActiveDropdown(null); }}
+                        className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      >
+                        <span className="truncate">{c}</span>
+                        {c === community && <Check className="w-3.5 h-3.5 text-sky-500 shrink-0" />}
+                      </button>
+                    ))
+                  )}
+                </div>
               </div>
             )}
           </div>
 
-          {/* Developer Filter Dropdown */}
+          {/* Dynamic Developer Filter Dropdown */}
           <div className="relative">
             <button
               onClick={() => setActiveDropdown(activeDropdown === 'developer' ? null : 'developer')}
@@ -89,17 +128,33 @@ const EnterpriseFilterBar = ({
             </button>
 
             {activeDropdown === 'developer' && (
-              <div className="absolute top-full left-0 mt-1.5 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1 overflow-hidden">
-                {DEVELOPERS.map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => { onChangeFilter('developer', d === developer ? '' : d); setActiveDropdown(null); }}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                  >
-                    <span>{d}</span>
-                    {d === developer && <Check className="w-3.5 h-3.5 text-purple-500" />}
-                  </button>
-                ))}
+              <div className="absolute top-full left-0 mt-1.5 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-2 space-y-1">
+                <div className="relative mb-1">
+                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search developer..."
+                    value={developerSearch}
+                    onChange={(e) => setDeveloperSearch(e.target.value)}
+                    className="w-full pl-8 pr-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg outline-none"
+                  />
+                </div>
+                <div className="max-h-56 overflow-y-auto space-y-0.5 custom-scrollbar">
+                  {filteredDevelopers.length === 0 ? (
+                    <div className="p-2 text-[11px] text-slate-400 text-center">No developer found</div>
+                  ) : (
+                    filteredDevelopers.map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => { onChangeFilter('developer', d === developer ? '' : d); setActiveDropdown(null); }}
+                        className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      >
+                        <span className="truncate">{d}</span>
+                        {d === developer && <Check className="w-3.5 h-3.5 text-purple-500 shrink-0" />}
+                      </button>
+                    ))
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -204,7 +259,7 @@ const EnterpriseFilterBar = ({
           <select
             value={activeSort}
             onChange={(e) => onChangeSort(e.target.value)}
-            className="px-2.5 py-1.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl outline-none"
+            className="px-2.5 py-1.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl outline-none cursor-pointer"
           >
             <option value="id_desc">Newest First</option>
             <option value="id_asc">Oldest First</option>
@@ -252,7 +307,7 @@ const EnterpriseFilterBar = ({
 
           <button
             onClick={onClearAll}
-            className="text-[11px] font-semibold text-red-500 dark:text-red-400 hover:underline ml-auto flex items-center gap-1"
+            className="text-[11px] font-semibold text-red-500 dark:text-red-400 hover:underline ml-auto flex items-center gap-1 cursor-pointer"
           >
             <RotateCcw className="w-3 h-3" /> Clear All Filters
           </button>

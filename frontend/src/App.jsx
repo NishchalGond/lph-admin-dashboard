@@ -5,17 +5,13 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 
-// Direct imports for 100% reliable instant rendering
+// Direct imports for instant rendering
 import DashboardHome from './pages/DashboardHome';
 import GlobalSearch from './pages/GlobalSearch';
 import FileExplorer from './pages/FileExplorer';
 import RecordExplorer from './pages/RecordExplorer';
 import BatchExplorer from './pages/BatchExplorer';
-import DuplicateCenter from './pages/DuplicateCenter';
-import ProcessingMonitor from './pages/ProcessingMonitor';
-import LogsViewer from './pages/LogsViewer';
 import Analytics from './pages/Analytics';
-import WorkflowSummary from './pages/WorkflowSummary';
 import FileDetails from './pages/FileDetails';
 import RecordDetails from './pages/RecordDetails';
 import BatchDetails from './pages/BatchDetails';
@@ -65,11 +61,7 @@ function App() {
             <Route path="/records/:recordId" element={<ProtectedRoute><RecordDetails /></ProtectedRoute>} />
             <Route path="/batches"          element={<ProtectedRoute><BatchExplorer /></ProtectedRoute>} />
             <Route path="/batches/:batchId" element={<ProtectedRoute><BatchDetails /></ProtectedRoute>} />
-            <Route path="/duplicates"  element={<ProtectedRoute><DuplicateCenter /></ProtectedRoute>} />
-            <Route path="/monitor"     element={<ProtectedRoute><ProcessingMonitor /></ProtectedRoute>} />
-            <Route path="/logs"        element={<ProtectedRoute><LogsViewer /></ProtectedRoute>} />
             <Route path="/analytics"   element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/summary"     element={<ProtectedRoute><WorkflowSummary /></ProtectedRoute>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Search, LayoutDashboard, Table, Layers, FolderTree, Copy, Activity, 
-  FileText, BarChart3, FileCheck, ArrowRight, CornerDownLeft, X, Sparkles
+  Search, LayoutDashboard, Table, Layers, FolderTree, BarChart3, 
+  ArrowRight, CornerDownLeft, X, Sparkles
 } from 'lucide-react';
 
 const COMMAND_ITEMS = [
@@ -10,11 +10,7 @@ const COMMAND_ITEMS = [
   { id: 'records', label: 'Open Property Ledger (23 Headers)', path: '/records', group: 'Navigation', icon: Table, shortcut: 'G R' },
   { id: 'batches', label: 'View Consolidated Batches', path: '/batches', group: 'Navigation', icon: Layers, shortcut: 'G B' },
   { id: 'files', label: 'Explore File Manager', path: '/files', group: 'Navigation', icon: FolderTree, shortcut: 'G F' },
-  { id: 'duplicates', label: 'Check Duplicate Center', path: '/duplicates', group: 'Navigation', icon: Copy, shortcut: 'G D' },
-  { id: 'monitor', label: 'n8n Live Workflow Monitor', path: '/monitor', group: 'Real-Time Engine', icon: Activity, badge: 'Live' },
-  { id: 'logs', label: 'Inspect System Logs', path: '/logs', group: 'System', icon: FileText, shortcut: 'G L' },
-  { id: 'analytics', label: 'View System Throughput Analytics', path: '/analytics', group: 'System', icon: BarChart3, shortcut: 'G A' },
-  { id: 'summary', label: 'Workflow Consolidation Summary', path: '/summary', group: 'System', icon: FileCheck, shortcut: 'G S' },
+  { id: 'analytics', label: 'View System Analytics', path: '/analytics', group: 'System', icon: BarChart3, shortcut: 'G A' },
 ];
 
 const CommandPalette = ({ isOpen, onClose }) => {
@@ -98,7 +94,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
           />
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -115,7 +111,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
                   navigate(`/search?q=${encodeURIComponent(query)}`);
                   onClose();
                 }}
-                className="inline-flex items-center gap-2 text-xs font-semibold text-sky-400 hover:underline pt-2"
+                className="inline-flex items-center gap-2 text-xs font-semibold text-sky-400 hover:underline pt-2 cursor-pointer"
               >
                 <span>Search all records for &quot;{query}&quot;</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -151,11 +147,6 @@ const CommandPalette = ({ isOpen, onClose }) => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {item.badge && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                        {item.badge}
-                      </span>
-                    )}
                     {item.shortcut && (
                       <kbd className="px-1.5 py-0.5 text-[10px] font-mono font-bold text-slate-400 bg-white/5 border border-white/10 rounded-md">
                         {item.shortcut}
@@ -177,7 +168,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
             <span><kbd className="font-mono bg-white/10 px-1 py-0.5 rounded">ESC</kbd> Close</span>
           </div>
           <span className="flex items-center gap-1 text-sky-400 font-semibold">
-            <Sparkles className="w-3 h-3" /> Linear Command Bar
+            <Sparkles className="w-3 h-3" /> Command Bar
           </span>
         </div>
       </div>

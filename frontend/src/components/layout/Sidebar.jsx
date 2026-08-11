@@ -7,15 +7,9 @@ import {
   FolderTree,
   Table,
   Layers,
-  Copy,
-  Activity,
-  FileText,
   BarChart3,
-  FileCheck,
   Building2,
   LogOut,
-  Zap,
-  Shield,
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -32,11 +26,7 @@ const NAV_SECTIONS = [
     group: 'Data Pipeline',
     items: [
       { label: 'File Explorer',   path: '/files',      icon: FolderTree },
-      { label: 'Duplicates',      path: '/duplicates', icon: Copy },
-      { label: 'Workflow Monitor',path: '/monitor',    icon: Activity,        badge: 'Live', live: true },
-      { label: 'System Logs',     path: '/logs',       icon: FileText },
       { label: 'Analytics',       path: '/analytics',  icon: BarChart3 },
-      { label: 'Summary',         path: '/summary',    icon: FileCheck },
     ],
   },
 ];
@@ -97,7 +87,6 @@ const Sidebar = () => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path ||
                   (item.path !== '/' && location.pathname.startsWith(item.path));
-                const isHovered = hoveredPath === item.path;
 
                 return (
                   <NavLink
@@ -127,18 +116,12 @@ const Sidebar = () => {
 
                     <span className="relative flex-1 truncate">{item.label}</span>
 
-                    {item.live && (
-                      <span className="relative flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold">
-                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                        Live
-                      </span>
-                    )}
-                    {item.badge && !item.live && (
+                    {item.badge && (
                       <span className="relative flex-shrink-0 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/8 text-slate-500 dark:text-slate-400 text-[9px] font-mono font-bold">
                         {item.badge}
                       </span>
                     )}
-                    {item.shortcut && !item.badge && !item.live && (
+                    {item.shortcut && !item.badge && (
                       <kbd className="relative flex-shrink-0 px-1 py-0.5 text-[9px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 rounded">
                         {item.shortcut}
                       </kbd>
@@ -153,13 +136,6 @@ const Sidebar = () => {
 
       {/* ── Footer Status Bar ── */}
       <div className="px-3 pb-4 space-y-3 border-t border-slate-200/60 dark:border-white/5 pt-3">
-        {/* n8n Status */}
-        <div className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
-          <Zap className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" aria-hidden="true" />
-          <span className="text-[10px] flex-1 truncate">n8n Webhook Active</span>
-          <Shield className="w-3 h-3 text-emerald-500 flex-shrink-0" />
-        </div>
-
         {/* User profile */}
         <div className="flex items-center gap-2.5 px-2">
           <div
@@ -182,7 +158,7 @@ const Sidebar = () => {
             onClick={logout}
             aria-label="Sign out of LPH Real Estate CRM"
             title="Sign out"
-            className="flex-shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-150"
+            className="flex-shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-150 cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
           </button>

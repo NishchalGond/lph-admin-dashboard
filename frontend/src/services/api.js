@@ -47,6 +47,7 @@ export const getFileDetails = (fileId) => api.get(`/files/${fileId}`);
 export const getRecords = (params) => api.get('/records', { params });
 export const getRecordDetails = (recordId) => api.get(`/records/${recordId}`);
 export const getRecordSuggestions = (q, limit = 8) => api.get('/records/suggestions', { params: { q, limit } });
+export const getFilterOptions = () => api.get('/records/filter-options');
 
 export const getBatches = (params) => api.get('/batches', { params });
 export const getBatchDetails = (batchId) => api.get(`/batches/${batchId}`);

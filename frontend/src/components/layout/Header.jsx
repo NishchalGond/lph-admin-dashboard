@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import CommandPalette from '../ui/CommandPalette';
-import { Sun, Moon, Search, ChevronRight, Bell, Command } from 'lucide-react';
+import { Sun, Moon, Search, ChevronRight } from 'lucide-react';
 
 const ROUTE_META = {
   '/':           { title: 'Overview',           subtitle: 'Executive Dashboard' },
@@ -11,11 +11,7 @@ const ROUTE_META = {
   '/records':    { title: 'Property Ledger',     subtitle: '23 Real Estate Headers' },
   '/files':      { title: 'File Explorer',       subtitle: 'Source Files' },
   '/batches':    { title: 'Batch Explorer',      subtitle: 'Consolidated Runs' },
-  '/duplicates': { title: 'Duplicate Center',    subtitle: 'Detection Engine' },
-  '/monitor':    { title: 'Workflow Monitor',    subtitle: 'n8n Live Engine' },
-  '/logs':       { title: 'System Logs',         subtitle: 'Audit Trail' },
   '/analytics':  { title: 'Analytics',           subtitle: 'Throughput & Trends' },
-  '/summary':    { title: 'Workflow Summary',    subtitle: 'Executive Report' },
 };
 
 const Header = () => {
@@ -76,7 +72,7 @@ const Header = () => {
         <button
           onClick={() => setIsCommandOpen(true)}
           aria-label="Open command palette (Ctrl+K)"
-          className="hidden md:flex items-center gap-3 w-80 xl:w-96 px-3.5 py-2 rounded-xl text-xs font-medium text-slate-400 dark:text-slate-500 border border-black/[0.08] dark:border-white/[0.08] bg-black/[0.025] dark:bg-white/[0.025] hover:border-sky-500/40 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-sky-500/[0.03] transition-all duration-200 group"
+          className="hidden md:flex items-center gap-3 w-80 xl:w-96 px-3.5 py-2 rounded-xl text-xs font-medium text-slate-400 dark:text-slate-500 border border-black/[0.08] dark:border-white/[0.08] bg-black/[0.025] dark:bg-white/[0.025] hover:border-sky-500/40 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-sky-500/[0.03] transition-all duration-200 group cursor-pointer"
         >
           <Search className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 group-hover:text-sky-400 transition-colors flex-shrink-0" />
           <span className="flex-1 text-left truncate">Search records, units, plots…</span>
@@ -96,7 +92,7 @@ const Header = () => {
           <button
             onClick={() => setIsCommandOpen(true)}
             aria-label="Open search"
-            className="md:hidden p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-all"
+            className="md:hidden p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-all cursor-pointer"
           >
             <Search className="w-4 h-4" />
           </button>
@@ -108,7 +104,7 @@ const Header = () => {
           <button
             onClick={toggleTheme}
             aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="p-2 rounded-xl text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04] border border-transparent hover:border-black/[0.06] dark:hover:border-white/[0.06] transition-all duration-200"
+            className="p-2 rounded-xl text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04] border border-transparent hover:border-black/[0.06] dark:hover:border-white/[0.06] transition-all duration-200 cursor-pointer"
           >
             {darkMode
               ? <Sun  className="w-4 h-4 text-amber-400" />

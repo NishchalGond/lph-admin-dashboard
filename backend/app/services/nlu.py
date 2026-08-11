@@ -157,11 +157,6 @@ def parse_natural_language_query(query_str: str) -> Dict[str, Any]:
         if standalone_unit:
             intent["unit_number"] = standalone_unit.group(1).upper()
 
-    # Extract Phone Number (e.g. "+971526116195", "0526116195", "971526116195")
-    digits_only = re.sub(r'\D', '', raw_query)
-    if len(digits_only) >= 7 and not intent.get("unit_number"):
-        intent["phone_number"] = digits_only
-
     # 5. Extract Plot Number (e.g. "plot number 304", "plot 304", "plot reg 304")
     plot_match = re.search(r'\b(?:plot|plot number|plot reg|plot no\.?)\s*#?\s*([a-z0-9\-]+)\b', norm_query)
     if plot_match:
