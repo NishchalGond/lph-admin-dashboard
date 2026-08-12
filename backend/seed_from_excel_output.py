@@ -982,15 +982,65 @@ def import_one_file(
             print()
             print(f"Sheet: {sheet_name}")
 
+            # Read without assuming row 1 is the header. Some workbooks
+            # contain a blank/title row before the real column headers.
+            df_raw = pd.read_excel(
+                xls,
+                sheet_name=sheet_name,
+                header=None,
+            )
+
+            # Detect the real header row by looking for known field names.
+            header_keywords = {
+                "name",
+                "community",
+                "building/cluster",
+                "unit number",
+                "property type",
+                "mobile1",
+                "mobile 1",
+            }
+
+            header_row = None
+            for candidate_index in range(min(15, len(df_raw))):
+                candidate_values = {
+                    normalize_header(value)
+                    for value in df_raw.iloc[candidate_index].tolist()
+                    if pd.notna(value)
+                }
+
+                matches = sum(
+                    1
+                    for keyword in header_keywords
+                    if normalize_header(keyword) in candidate_values
+                )
+
+                if matches >= 2:
+                    header_row = candidate_index
+                    break
+
+            if header_row is None:
+                header_row = 0
+
+            # Re-read using the detected header row.
             df = pd.read_excel(
                 xls,
                 sheet_name=sheet_name,
+                header=header_row,
             )
 
-            # Remove completely empty rows.
+            # Remove completely empty rows/columns.
+            df = df.dropna(
+                axis=1,
+                how="all",
+            )
             df = df.dropna(
                 how="all"
             ).reset_index(drop=True)
+
+            print(
+                f"    Detected header row: {header_row + 1}"
+            )
 
             print(
                 f"Rows: {len(df):,}"
