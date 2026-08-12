@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { getRecordDetails } from '../../services/api';
 import Badge from './Badge';
+import { formatPhoneNumber } from '../ledger/EnterpriseDataGrid';
 
 /* ────────────────────────────────────────────
    Tab definitions
@@ -284,9 +285,9 @@ const PropertyDeepDivePanel = ({ recordId, onClose }) => {
                       <InfoCard label="PI Number / PID" value={rec.pi_number} mono accent />
                       <InfoCard label="Buyer / Seller Type" value={rec.buyer_seller_type} />
                       <InfoCard label="Nationality" value={rec.nationality} />
-                      <InfoCard label="Mobile 1" value={rec.mobile_1} mono />
-                      <InfoCard label="Mobile 2" value={rec.mobile_2} mono />
-                      <InfoCard label="Mobile 3" value={rec.mobile_3} mono />
+                      <InfoCard label="Mobile 1" value={formatPhoneNumber(rec.mobile_1)} mono />
+                      <InfoCard label="Mobile 2" value={formatPhoneNumber(rec.mobile_2)} mono />
+                      <InfoCard label="Mobile 3" value={formatPhoneNumber(rec.mobile_3)} mono />
                       <div className="col-span-2 sm:col-span-3">
                         <InfoCard label="Email Address" value={rec.email_address} />
                       </div>

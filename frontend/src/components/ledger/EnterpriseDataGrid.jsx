@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, ChevronRight, Eye } from 'lucide-react';
+import { Table, ChevronRight, Eye, Phone, MapPin } from 'lucide-react';
 import HighlightText from '../ui/HighlightText';
 import Badge from '../ui/Badge';
 import SkeletonTable from '../ui/SkeletonTable';
@@ -18,23 +18,23 @@ const DEFAULT_VISIBLE_COLUMNS = [
 ];
 
 const ALL_COLUMNS = [
-  { id: 'community', label: 'Community', minWidth: '160px' },
-  { id: 'name', label: 'Name / Owner Name', minWidth: '220px' },
-  { id: 'mobile_1', label: 'Phone / Mobile', minWidth: '140px' },
-  { id: 'pi_number', label: 'PID / PI Number', minWidth: '130px' },
+  { id: 'community', label: 'Community', minWidth: '240px' },
+  { id: 'name', label: 'Name / Owner Name', minWidth: '240px' },
+  { id: 'mobile_1', label: 'Phone / Mobile', minWidth: '165px' },
+  { id: 'pi_number', label: 'PID / PI Number', minWidth: '135px' },
   { id: 'building_cluster', label: 'Building / Cluster', minWidth: '180px' },
-  { id: 'unit_number', label: 'Unit Number', minWidth: '110px' },
+  { id: 'unit_number', label: 'Unit Number', minWidth: '120px' },
   { id: 'property_type', label: 'Property Type', minWidth: '130px' },
-  { id: 'sub_community', label: 'Sub-Community', minWidth: '150px' },
-  { id: 'size', label: 'Size (sq ft)', minWidth: '110px' },
+  { id: 'sub_community', label: 'Sub-Community', minWidth: '160px' },
+  { id: 'size', label: 'Size (sq ft)', minWidth: '120px' },
   { id: 'plot_reg_no', label: 'Plot Reg No', minWidth: '130px' },
   { id: 'plot_number', label: 'Plot No.', minWidth: '110px' },
   { id: 'dmno', label: 'DMNO', minWidth: '110px' },
   { id: 'dmsubno', label: 'DMsubno', minWidth: '110px' },
   { id: 'bedroom', label: 'Bedrooms', minWidth: '95px' },
-  { id: 'buyer_seller_type', label: 'Buyer/Seller Type', minWidth: '120px' },
-  { id: 'mobile_2', label: 'Mobile 2', minWidth: '130px' },
-  { id: 'mobile_3', label: 'Mobile 3', minWidth: '130px' },
+  { id: 'buyer_seller_type', label: 'Buyer/Seller Type', minWidth: '130px' },
+  { id: 'mobile_2', label: 'Mobile 2', minWidth: '145px' },
+  { id: 'mobile_3', label: 'Mobile 3', minWidth: '145px' },
   { id: 'email_address', label: 'Email', minWidth: '190px' },
   { id: 'nationality', label: 'Nationality', minWidth: '130px' },
   { id: 'procedure_value', label: 'Value (AED)', minWidth: '160px' },
@@ -47,6 +47,27 @@ const getInitials = (name) => {
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   return name.slice(0, 2).toUpperCase();
+};
+
+const formatPhoneNumber = (phoneStr) => {
+  if (!phoneStr) return null;
+  let clean = String(phoneStr).trim();
+  if (!clean) return null;
+
+  if (clean.includes('|')) {
+    const parts = clean.split('|');
+    if (parts.length === 2) {
+      const code = parts[0].trim();
+      const rest = parts[1].trim();
+      clean = `+${code} ${rest}`;
+    } else {
+      clean = clean.replace(/\|/g, ' ');
+    }
+  } else if (clean.startsWith('971') && clean.length >= 10 && !clean.startsWith('+')) {
+    clean = `+${clean}`;
+  }
+
+  return clean;
 };
 
 const EnterpriseDataGrid = ({
@@ -73,7 +94,7 @@ const EnterpriseDataGrid = ({
     });
   };
 
-  const renderNull = () => <span className="text-slate-300 dark:text-slate-600">-</span>;
+  const renderNull = () => <span className="text-slate-300 dark:text-slate-600 font-normal">—</span>;
 
   if (loading) return <SkeletonTable rows={12} cols={8} />;
   if (error) return <ErrorState message={error} onRetry={onRetry} />;
@@ -93,17 +114,17 @@ const EnterpriseDataGrid = ({
   return (
     <div className="relative w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
       {/* Scrollable Data Grid Container */}
-      <div className="overflow-x-auto overflow-y-auto min-h-[380px] max-h-[650px] custom-scrollbar">
+      <div className="overflow-x-auto overflow-y-auto min-h-[380px] max-h-[680px] custom-scrollbar">
         <table className="w-full text-left text-xs whitespace-nowrap border-separate border-spacing-0">
           {/* Table Header */}
-          <thead className="bg-slate-50/90 dark:bg-slate-800/90 sticky top-0 z-30 backdrop-blur-xs">
+          <thead className="bg-slate-50/95 dark:bg-slate-800/95 sticky top-0 z-30 backdrop-blur-xs">
             <tr>
-              {orderedColumns.map((col) => (
+              {orderedColumns.map((col, idx) => (
                 <th
                   key={col.id}
                   scope="col"
                   style={{ minWidth: col.minWidth }}
-                  className={`px-4 ${pyClass} text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 sticky top-0 z-30 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 ${
+                  className={`py-3.5 ${idx === 0 ? 'pl-6 pr-4' : 'px-4'} text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 sticky top-0 z-30 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 ${
                     col.id === 'procedure_value' ? 'text-right pr-4' : ''
                   }`}
                 >
@@ -111,7 +132,7 @@ const EnterpriseDataGrid = ({
                 </th>
               ))}
 
-              <th scope="col" className={`px-4 ${pyClass} text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 sticky top-0 z-30 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-right pr-4 min-w-[100px]`}>
+              <th scope="col" className={`px-4 pr-6 ${pyClass} text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 sticky top-0 z-30 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-right min-w-[100px]`}>
                 Actions
               </th>
             </tr>
@@ -136,25 +157,31 @@ const EnterpriseDataGrid = ({
                     isEven ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/40 dark:bg-slate-900/40'
                   } hover:bg-sky-50/70 dark:hover:bg-sky-950/40`}
                 >
-                  {orderedColumns.map((col) => {
+                  {orderedColumns.map((col, idx) => {
                     const colId = col.id;
+                    const isFirst = idx === 0;
+                    const cellPadding = isFirst ? 'pl-6 pr-4' : 'px-4';
 
                     if (colId === 'community') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-semibold text-sky-700 dark:text-sky-400 border-b border-slate-100 dark:border-slate-800/60`}>
-                          {rec.community ? <HighlightText text={rec.community} highlight={appliedSearch} /> : renderNull()}
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-semibold text-sky-700 dark:text-sky-400 border-b border-slate-100 dark:border-slate-800/60`}>
+                          {rec.community ? (
+                            <span className="font-bold text-sky-700 dark:text-sky-400">
+                              <HighlightText text={rec.community} highlight={appliedSearch} />
+                            </span>
+                          ) : renderNull()}
                         </td>
                       );
                     }
 
                     if (colId === 'name') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800/60 min-w-[220px] max-w-[260px] truncate`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800/60 min-w-[240px]`}>
                           <div className="flex items-center gap-2.5">
                             <div className="w-7 h-7 rounded-full bg-slate-900 dark:bg-sky-500 text-white dark:text-slate-950 text-xs font-black flex items-center justify-center flex-shrink-0 shadow-xs">
                               {initials}
                             </div>
-                            <span className="truncate text-slate-900 dark:text-white font-bold">
+                            <span className="text-slate-900 dark:text-white font-bold whitespace-nowrap">
                               <HighlightText text={ownerName} highlight={appliedSearch} />
                             </span>
                           </div>
@@ -163,11 +190,12 @@ const EnterpriseDataGrid = ({
                     }
 
                     if (colId === 'mobile_1') {
+                      const formattedPhone = formatPhoneNumber(rec.mobile_1);
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-mono text-slate-800 dark:text-slate-200 font-semibold border-b border-slate-100 dark:border-slate-800/60`}>
-                          {rec.mobile_1 ? (
-                            <span className="inline-flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-bold">
-                              <HighlightText text={rec.mobile_1} highlight={appliedSearch} />
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono text-slate-800 dark:text-slate-200 font-semibold border-b border-slate-100 dark:border-slate-800/60`}>
+                          {formattedPhone ? (
+                            <span className="inline-flex items-center gap-1 text-slate-900 dark:text-white font-bold font-mono">
+                              <HighlightText text={formattedPhone} highlight={appliedSearch} />
                             </span>
                           ) : renderNull()}
                         </td>
@@ -176,7 +204,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'pi_number') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-mono font-bold border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono font-bold border-b border-slate-100 dark:border-slate-800/60`}>
                           {rec.pi_number ? (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/80 font-bold">
                               <HighlightText text={rec.pi_number} highlight={appliedSearch} />
@@ -188,7 +216,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'building_cluster') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-semibold text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800/60 max-w-[200px] truncate`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-semibold text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800/60`}>
                           {rec.building_cluster ? <HighlightText text={rec.building_cluster} highlight={appliedSearch} /> : renderNull()}
                         </td>
                       );
@@ -196,7 +224,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'unit_number') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-mono font-bold border-b border-slate-100 dark:border-slate-800/60 min-w-[110px]`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono font-bold border-b border-slate-100 dark:border-slate-800/60 min-w-[120px]`}>
                           {rec.unit_number ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold font-mono">
                               <HighlightText text={rec.unit_number} highlight={appliedSearch} />
@@ -208,7 +236,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'property_type') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-bold border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-bold border-b border-slate-100 dark:border-slate-800/60`}>
                           {rec.property_type ? (
                             <Badge status={rec.property_type} color="emerald" size="xs" />
                           ) : (
@@ -220,7 +248,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'sub_community') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
                           {rec.sub_community ? <HighlightText text={rec.sub_community} highlight={appliedSearch} /> : renderNull()}
                         </td>
                       );
@@ -228,7 +256,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'size') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-mono text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/60`}>
                           {sizeSqft ? `${sizeSqft.toLocaleString()} sq ft` : renderNull()}
                         </td>
                       );
@@ -236,7 +264,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'plot_reg_no') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-mono text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
                           {rec.plot_reg_no ? <HighlightText text={rec.plot_reg_no} highlight={appliedSearch} /> : renderNull()}
                         </td>
                       );
@@ -244,7 +272,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'plot_number') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-mono text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
                           {rec.plot_number ? rec.plot_number : renderNull()}
                         </td>
                       );
@@ -252,7 +280,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'dmno') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-mono text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
                           {rec.dmno ? <HighlightText text={rec.dmno} highlight={appliedSearch} /> : renderNull()}
                         </td>
                       );
@@ -260,7 +288,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'dmsubno') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-mono text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
                           {rec.dmsubno ? rec.dmsubno : renderNull()}
                         </td>
                       );
@@ -268,7 +296,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'bedroom') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-bold text-center text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-bold text-center text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800/60`}>
                           {rec.bedroom ? rec.bedroom : renderNull()}
                         </td>
                       );
@@ -276,31 +304,33 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'buyer_seller_type') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} border-b border-slate-100 dark:border-slate-800/60`}>
                           <Badge status={rec.buyer_seller_type || 'Buyer'} size="xs" />
                         </td>
                       );
                     }
 
                     if (colId === 'mobile_2') {
+                      const formattedPhone2 = formatPhoneNumber(rec.mobile_2);
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-mono text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
-                          {rec.mobile_2 ? rec.mobile_2 : renderNull()}
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
+                          {formattedPhone2 ? formattedPhone2 : renderNull()}
                         </td>
                       );
                     }
 
                     if (colId === 'mobile_3') {
+                      const formattedPhone3 = formatPhoneNumber(rec.mobile_3);
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-mono text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
-                          {rec.mobile_3 ? rec.mobile_3 : renderNull()}
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60`}>
+                          {formattedPhone3 ? formattedPhone3 : renderNull()}
                         </td>
                       );
                     }
 
                     if (colId === 'email_address') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60 max-w-[180px] truncate`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60 max-w-[190px] truncate`}>
                           {rec.email_address ? <HighlightText text={rec.email_address} highlight={appliedSearch} /> : renderNull()}
                         </td>
                       );
@@ -308,7 +338,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'nationality') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/60`}>
                           {rec.nationality ? rec.nationality : renderNull()}
                         </td>
                       );
@@ -316,7 +346,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'procedure_value') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} text-right pr-4 font-extrabold font-mono text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800/60 min-w-[150px]`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} text-right pr-4 font-extrabold font-mono text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800/60 min-w-[150px]`}>
                           {val ? `AED ${val.toLocaleString()}` : renderNull()}
                         </td>
                       );
@@ -324,7 +354,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'developer') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} font-semibold text-purple-700 dark:text-purple-400 border-b border-slate-100 dark:border-slate-800/60`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-semibold text-purple-700 dark:text-purple-400 border-b border-slate-100 dark:border-slate-800/60`}>
                           {rec.developer ? <HighlightText text={rec.developer} highlight={appliedSearch} /> : renderNull()}
                         </td>
                       );
@@ -332,7 +362,7 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'project') {
                       return (
-                        <td key={colId} className={`px-4 ${pyClass} text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60 max-w-[150px] truncate`}>
+                        <td key={colId} className={`${cellPadding} ${pyClass} text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60 max-w-[160px] truncate`}>
                           {rec.project ? <HighlightText text={rec.project} highlight={appliedSearch} /> : renderNull()}
                         </td>
                       );
@@ -342,13 +372,13 @@ const EnterpriseDataGrid = ({
                   })}
 
                   {/* Row Actions Column */}
-                  <td className={`px-4 ${pyClass} text-right pr-4 border-b border-slate-100 dark:border-slate-800/60`}>
+                  <td className={`px-4 pr-6 ${pyClass} text-right border-b border-slate-100 dark:border-slate-800/60`}>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectRecord(rec.id);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/60 border border-sky-200/80 dark:border-sky-800/80 transition-all shadow-2xs group-hover:bg-sky-500 group-hover:text-white group-hover:border-sky-500"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-white border border-sky-200/80 dark:border-sky-800/80 transition-all shadow-2xs cursor-pointer"
                     >
                       <span>View</span>
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -376,6 +406,6 @@ const EnterpriseDataGrid = ({
   );
 };
 
-export { DEFAULT_VISIBLE_COLUMNS, ALL_COLUMNS };
+export { DEFAULT_VISIBLE_COLUMNS, ALL_COLUMNS, formatPhoneNumber };
 export default EnterpriseDataGrid;
 
