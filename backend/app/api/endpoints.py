@@ -598,11 +598,11 @@ def get_records(
                 ConsolidatedRecord.original_workbook.ilike(s)
             ]
 
-            if len(digits) >= 5:
+            if len(digits) >= 2:
                 phone_variants = [digits]
-                if digits.startswith("971") and len(digits) > 5:
+                if digits.startswith("971") and len(digits) > 4:
                     phone_variants.append(digits[3:])
-                elif digits.startswith("0") and len(digits) > 5:
+                elif digits.startswith("0") and len(digits) > 3:
                     phone_variants.append(digits[1:])
 
                 for pv in phone_variants:
@@ -611,7 +611,10 @@ def get_records(
                         ConsolidatedRecord.mobile_1.ilike(pv_pat),
                         ConsolidatedRecord.mobile_2.ilike(pv_pat),
                         ConsolidatedRecord.mobile_3.ilike(pv_pat),
-                        ConsolidatedRecord.pi_number.ilike(pv_pat)
+                        ConsolidatedRecord.pi_number.ilike(pv_pat),
+                        func.replace(func.replace(func.replace(ConsolidatedRecord.mobile_1, '|', ''), '-', ''), ' ', '').ilike(pv_pat),
+                        func.replace(func.replace(func.replace(ConsolidatedRecord.mobile_2, '|', ''), '-', ''), ' ', '').ilike(pv_pat),
+                        func.replace(func.replace(func.replace(ConsolidatedRecord.mobile_3, '|', ''), '-', ''), ' ', '').ilike(pv_pat)
                     ])
 
             query = query.filter(or_(*search_clauses))
@@ -689,26 +692,34 @@ def get_record_suggestions(
     limit: int = 10,
     db: Session = Depends(get_db)
 ):
-    """Provides instant search auto-complete suggestions grouped by category and AI intent."""
+    """Provides instant search auto-complete suggestions grouped by category and data fields."""
     clean_q = q.strip()
     prefix_term = f"{clean_q}%"
     contains_term = f"%{clean_q}%"
+    digits = re.sub(r'\D', '', clean_q)
     suggestions = []
 
-    # 0. Natural Language AI Intent Suggestion
-    intent_dict = parse_natural_language_query(q)
-    if intent_dict.get("community") or intent_dict.get("building_cluster") or intent_dict.get("property_type"):
-        comm = intent_dict.get("community") or "Dubai Hills"
-        bldg = intent_dict.get("building_cluster") or "Park Horizon"
-        ptype = intent_dict.get("property_type") or "Apartment"
-        suggestions.append({
-            "type": "AI Intent",
-            "label": f"Search {ptype}s in {bldg} ({comm})",
-            "value": f"{ptype} in {bldg} {comm}",
-            "field": "search"
-        })
+    # 1. Phone number matches when digits are entered
+    if len(digits) >= 2:
+        pv_pat = f"%{digits}%"
+        phone_recs = db.query(ConsolidatedRecord).filter(
+            or_(
+                ConsolidatedRecord.mobile_1.ilike(pv_pat),
+                ConsolidatedRecord.mobile_2.ilike(pv_pat),
+                ConsolidatedRecord.mobile_3.ilike(pv_pat),
+                func.replace(func.replace(func.replace(ConsolidatedRecord.mobile_1, '|', ''), '-', ''), ' ', '').ilike(pv_pat)
+            )
+        ).limit(4).all()
 
-    # 1. Matching Owners (try prefix first)
+        for r in phone_recs:
+            ph = r.mobile_1 or r.mobile_2 or r.mobile_3
+            if ph:
+                raw_ph = str(ph).replace('|', ' ')
+                name_str = r.name or r.customer_name or ''
+                label = f"{raw_ph}" + (f" ({name_str})" if name_str else "")
+                suggestions.append({"type": "Phone", "label": label, "value": raw_ph, "field": "search"})
+
+    # 2. Matching Owners (try prefix first)
     owners = db.query(ConsolidatedRecord.name)\
         .filter(ConsolidatedRecord.name.ilike(prefix_term))\
         .distinct().limit(3).all()
@@ -720,7 +731,7 @@ def get_record_suggestions(
         if o[0]:
             suggestions.append({"type": "Owner", "label": o[0], "value": o[0], "field": "search"})
 
-    # 2. Matching Communities
+    # 3. Matching Communities
     communities = db.query(ConsolidatedRecord.community)\
         .filter(ConsolidatedRecord.community.ilike(prefix_term))\
         .distinct().limit(3).all()
@@ -732,7 +743,7 @@ def get_record_suggestions(
         if c[0]:
             suggestions.append({"type": "Community", "label": c[0], "value": c[0], "field": "community"})
 
-    # 3. Matching Buildings
+    # 4. Matching Buildings
     buildings = db.query(ConsolidatedRecord.building_cluster)\
         .filter(ConsolidatedRecord.building_cluster.ilike(prefix_term))\
         .distinct().limit(3).all()
@@ -744,7 +755,7 @@ def get_record_suggestions(
         if b[0]:
             suggestions.append({"type": "Building", "label": b[0], "value": b[0], "field": "search"})
 
-    # 4. Matching Units
+    # 5. Matching Units
     units = db.query(ConsolidatedRecord.unit_number, ConsolidatedRecord.building_cluster)\
         .filter(ConsolidatedRecord.unit_number.ilike(prefix_term))\
         .distinct().limit(3).all()

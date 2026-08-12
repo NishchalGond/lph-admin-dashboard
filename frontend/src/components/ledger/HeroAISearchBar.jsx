@@ -1,22 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, X, Sparkles, Building2, MapPin, User, Hash, Loader2, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, X, Building2, MapPin, User, Hash, Phone, Loader2, ArrowRight } from 'lucide-react';
 import { getRecordSuggestions } from '../../services/api';
 
-const QUICK_PROMPTS = [
-  { label: 'Villas in Dubai Hills', value: 'Show villas in Dubai Hills' },
-  { label: 'Unit 507', value: 'Unit 507' },
-  { label: 'Owner Mohammed', value: 'Owner Mohammed Ibrahim' },
-  { label: 'Apartments > 2000 sqft', value: 'Apartments larger than 2000 sqft' },
-  { label: 'Russian Owners', value: 'Russian owners' },
-  { label: 'Park Horizon Tower', value: 'Show Park Horizon Tower 2' }
-];
-
 const TYPE_META = {
-  'AI Intent': { icon: Sparkles, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-  Owner:       { icon: User,      color: 'text-sky-500',    bg: 'bg-sky-500/10'    },
-  Community:   { icon: MapPin,    color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-  Building:    { icon: Building2, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-  Unit:        { icon: Hash,      color: 'text-amber-500',  bg: 'bg-amber-500/10'  },
+  Owner:     { icon: User,      color: 'text-sky-500',    bg: 'bg-sky-500/10'    },
+  Phone:     { icon: Phone,     color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+  Community: { icon: MapPin,    color: 'text-purple-500', bg: 'bg-purple-500/10'  },
+  Building:  { icon: Building2, color: 'text-indigo-500', bg: 'bg-indigo-500/10'  },
+  Unit:      { icon: Hash,      color: 'text-amber-500',  bg: 'bg-amber-500/10'   },
 };
 
 function useDebounce(value, delay) {
@@ -32,7 +23,7 @@ const HeroAISearchBar = ({
   value,
   onChange,
   onSearch,
-  placeholder = 'Ask AI anything… "Show villas in Dubai Hills", "Owner Mohammed Ibrahim", "Unit 507"',
+  placeholder = 'Search by Name, Phone Number, Community, Building, Unit, PID...',
   queryTimeMs = 63
 }) => {
   const [suggestions, setSuggestions] = useState([]);
@@ -42,7 +33,7 @@ const HeroAISearchBar = ({
 
   const containerRef = useRef(null);
   const inputRef = useRef(null);
-  const debouncedValue = useDebounce(value, 250);
+  const debouncedValue = useDebounce(value, 200);
 
   // Focus keyboard shortcut '/' or 'Ctrl+K'
   useEffect(() => {
@@ -56,7 +47,7 @@ const HeroAISearchBar = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Fetch suggestions
+  // Fetch live search suggestions as user types
   useEffect(() => {
     if (!debouncedValue || debouncedValue.trim().length < 1) {
       setSuggestions([]);
@@ -114,13 +105,11 @@ const HeroAISearchBar = ({
 
   return (
     <div ref={containerRef} className="space-y-2.5">
-      {/* Main Search Input Container */}
+      {/* Main Fast Search Input */}
       <div className="relative group">
-        <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 via-purple-500/20 to-indigo-500/20 rounded-2xl blur-md opacity-40 group-focus-within:opacity-100 transition-opacity"></div>
-        
-        <div className="relative flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
-          <div className="pl-4 pr-2 flex items-center gap-2 pointer-events-none text-sky-500">
-            <Sparkles className="w-5 h-5 animate-pulse" />
+        <div className="relative flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
+          <div className="pl-4 pr-2 flex items-center gap-2 pointer-events-none text-slate-400 dark:text-slate-500">
+            <Search className="w-5 h-5" />
           </div>
 
           <input
@@ -134,14 +123,14 @@ const HeroAISearchBar = ({
             className="w-full py-3.5 pr-24 text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 bg-transparent outline-none"
           />
 
-          {/* Right Action & Keyboard Shortcuts */}
+          {/* Right Actions & Search Trigger */}
           <div className="absolute right-3 flex items-center gap-2">
             {isLoading ? (
               <Loader2 className="w-4 h-4 text-slate-400 animate-spin" />
             ) : value ? (
               <button
                 onClick={() => { onChange(''); onSearch(''); inputRef.current?.focus(); }}
-                className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
+                className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -153,20 +142,20 @@ const HeroAISearchBar = ({
 
             <button
               onClick={() => onSearch(value)}
-              className="px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-semibold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+              className="px-3.5 py-1.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
             >
               <span>Search</span>
-              <ArrowRight className="w-3 h-3" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Suggestions Popover */}
+      {/* Live Auto-Complete Suggestions Dropdown */}
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden py-1 max-h-72 overflow-y-auto">
-          <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-400">
-            <span>AI Intent Suggestions</span>
+          <div className="px-3.5 py-1.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            <span>Matching Records</span>
             <span>Use ↑↓ to navigate</span>
           </div>
 
@@ -178,14 +167,14 @@ const HeroAISearchBar = ({
                 key={i}
                 onClick={() => handleSelectSuggestion(s.value)}
                 onMouseEnter={() => setActiveIndex(i)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 text-left text-xs transition-colors ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 text-left text-xs transition-colors cursor-pointer ${
                   i === activeIndex
-                    ? 'bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400'
+                    ? 'bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 font-bold'
                     : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={`w-6 h-6 rounded-lg ${meta.bg} flex items-center justify-center`}>
+                  <div className={`w-6 h-6 rounded-lg ${meta.bg} flex items-center justify-center flex-shrink-0`}>
                     <Icon className={`w-3.5 h-3.5 ${meta.color}`} />
                   </div>
                   <span className="font-semibold truncate">{s.label}</span>
