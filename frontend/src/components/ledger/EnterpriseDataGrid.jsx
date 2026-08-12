@@ -148,17 +148,13 @@ const EnterpriseDataGrid = ({
                   key={col.id}
                   scope="col"
                   style={{ minWidth: col.minWidth }}
-                  className={`py-3.5 ${idx === 0 ? 'pl-6 pr-4' : 'px-4'} text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 sticky top-0 z-30 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 ${
+                  className={`py-3.5 ${idx === 0 ? 'pl-6 sm:pl-8 pr-4' : 'px-4'} text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 sticky top-0 z-30 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 ${
                     col.id === 'procedure_value' ? 'text-right pr-4' : ''
                   }`}
                 >
                   {col.label}
                 </th>
               ))}
-
-              <th scope="col" className={`px-4 pr-6 ${pyClass} text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 sticky top-0 z-30 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-right min-w-[100px]`}>
-                View
-              </th>
             </tr>
           </thead>
 
@@ -189,7 +185,7 @@ const EnterpriseDataGrid = ({
                   {orderedColumns.map((col, idx) => {
                     const colId = col.id;
                     const isFirst = idx === 0;
-                    const cellPadding = isFirst ? 'pl-6 pr-4' : 'px-4';
+                    const cellPadding = isFirst ? 'pl-6 sm:pl-8 pr-4' : 'px-4';
 
                     if (colId === 'name') {
                       return (
@@ -427,20 +423,6 @@ const EnterpriseDataGrid = ({
 
                     return null;
                   })}
-
-                  {/* Row Actions Column */}
-                  <td className={`px-4 pr-6 ${pyClass} text-right border-b border-slate-100 dark:border-slate-800/60`}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectRecord(rec.id);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-white border border-sky-200/80 dark:border-sky-800/80 transition-all shadow-2xs cursor-pointer"
-                    >
-                      <span>View</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
                 </tr>
               );
             })}
