@@ -189,12 +189,12 @@ const EnterpriseDataGrid = ({
 
                     if (colId === 'name') {
                       return (
-                        <td key={colId} className={`${cellPadding} ${pyClass} font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800/60 min-w-[240px]`}>
-                          <div className="flex items-center gap-2.5">
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800/60 max-w-[240px]`}>
+                          <div className="flex items-center gap-2.5 min-w-0">
                             <div className="w-7 h-7 rounded-full bg-slate-900 dark:bg-sky-500 text-white dark:text-slate-950 text-xs font-black flex items-center justify-center flex-shrink-0 shadow-xs">
                               {initials}
                             </div>
-                            <span className="text-slate-900 dark:text-white font-bold whitespace-nowrap">
+                            <span title={ownerName} className="truncate text-slate-900 dark:text-white font-bold block min-w-0">
                               <HighlightText text={ownerName} highlight={appliedSearch} />
                             </span>
                           </div>
