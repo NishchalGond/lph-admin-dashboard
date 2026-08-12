@@ -507,8 +507,15 @@ def get_filter_options(db: Session = Depends(get_db)):
     ).distinct().order_by(ConsolidatedRecord.property_type.asc()).all()
 
     def clean_options(raw_list):
-        opts = sorted(list(set(r[0].strip() for r in raw_list if r[0] and len(r[0].strip()) > 1)))
-        return opts
+        opts = []
+        for r in raw_list:
+            if not r or not r[0]:
+                continue
+            val = str(r[0]).strip()
+            # Must contain at least 3 alphabetic characters and not be numeric codes like "1-", "100-"
+            if len(val) >= 3 and re.search(r'[a-zA-Z]{3,}', val) and not re.match(r'^[0-9\-\.\s]+$', val):
+                opts.append(val)
+        return sorted(list(set(opts)))
 
     return {
         "communities": clean_options(communities_raw),
@@ -619,18 +626,26 @@ def get_records(
 
             query = query.filter(or_(*search_clauses))
 
-    # Strict field focus for Community dropdown filter
+    # Flexible field focus for Community dropdown filter
     if community:
         comm = community.strip()
-        query = query.filter(ConsolidatedRecord.community.ilike(f"%{comm}%"))
+        query = query.filter(or_(
+            ConsolidatedRecord.community.ilike(f"%{comm}%"),
+            ConsolidatedRecord.sub_community.ilike(f"%{comm}%")
+        ))
 
-    # Strict field focus for Developer dropdown filter
+    # Flexible field focus for Developer dropdown filter
     if developer:
         dev = developer.strip()
-        # Match primary developer keyword e.g. "Emaar Properties" -> "Emaar"
-        dev_words = [w for w in dev.split() if len(w) > 2 and w.lower() not in ('properties', 'realty', 'development', 'group', 'holding', 'holdings', 'pjsc', 'llc')]
+        dev_words = [w for w in dev.split() if len(w) > 2 and w.lower() not in ('properties', 'realty', 'development', 'group', 'holding', 'holdings', 'pjsc', 'llc', 'real', 'estate')]
         dev_term = dev_words[0] if dev_words else dev
-        query = query.filter(ConsolidatedRecord.developer.ilike(f"%{dev_term}%"))
+        query = query.filter(or_(
+            ConsolidatedRecord.developer.ilike(f"%{dev_term}%"),
+            ConsolidatedRecord.project.ilike(f"%{dev_term}%"),
+            ConsolidatedRecord.building_cluster.ilike(f"%{dev_term}%"),
+            ConsolidatedRecord.community.ilike(f"%{dev_term}%"),
+            ConsolidatedRecord.original_workbook.ilike(f"%{dev_term}%")
+        ))
     if property_type:
         query = query.filter(ConsolidatedRecord.property_type.ilike(f"%{property_type.strip()}%"))
     if buyer_seller_type:

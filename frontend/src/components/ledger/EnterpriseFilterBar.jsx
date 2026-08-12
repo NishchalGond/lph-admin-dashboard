@@ -33,8 +33,14 @@ const EnterpriseFilterBar = ({
   useEffect(() => {
     getFilterOptions()
       .then((res) => {
-        if (res.data?.communities?.length > 0) setCommunities(res.data.communities);
-        if (res.data?.developers?.length > 0) setDevelopers(res.data.developers);
+        if (res.data?.communities?.length > 0) {
+          const cleanComms = res.data.communities.filter(c => c && typeof c === 'string' && /[a-zA-Z]{3,}/.test(c) && !/^[0-9\-\.\s]+$/.test(c.trim()));
+          if (cleanComms.length > 0) setCommunities(cleanComms);
+        }
+        if (res.data?.developers?.length > 0) {
+          const cleanDevs = res.data.developers.filter(d => d && typeof d === 'string' && /[a-zA-Z]{3,}/.test(d) && !/^[0-9\-\.\s]+$/.test(d.trim()));
+          if (cleanDevs.length > 0) setDevelopers(cleanDevs);
+        }
       })
       .catch(() => {
         // Fallback to default lists on connection error
