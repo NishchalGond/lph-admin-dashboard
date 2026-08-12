@@ -266,6 +266,7 @@ def calculate_file_hash(file_path):
 
 NAME_ALIASES = [
     "Name",
+    "NameEn",
     "NAME",
     "Owner",
     "Owner Name",
@@ -315,6 +316,9 @@ BUILDING_ALIASES = [
     "Building/Cluster",
     "Building / Cluster",
     "Building",
+    "BuildingNameEn",
+    "BUILDING NAME",
+    "Building Name",
     "building",
     "BUILDING",
     "building_cluster",
@@ -340,6 +344,11 @@ UNIT_ALIASES = [
     "Unit No",
     "Unit No.",
     "Unit",
+    "UnitNumber",
+    "FLAT NUMBER",
+    "Flat Number",
+    "VILLA NO.",
+    "VILLA NO",
     "unit_number",
     "Flat",
     "Flat No",
@@ -358,6 +367,8 @@ UNIT_ALIASES = [
 SIZE_ALIASES = [
     "Size",
     "size",
+    "ACTUAL AREA",
+    "TOTAL AREA",
     "Area",
     "area",
     "Size Sq Ft",
@@ -375,6 +386,9 @@ SIZE_ALIASES = [
 PLOT_REG_ALIASES = [
     "Plot Reg. No",
     "Plot Reg No",
+    "Plot Pre Reg No",
+    "REGISTRATION NUMBER",
+    "Registration Number",
     "Plot Reg No.",
     "Plot Registration No",
     "Plot Registration Number",
@@ -386,6 +400,8 @@ PLOT_REG_ALIASES = [
 
 PLOT_NUMBER_ALIASES = [
     "Plot Number",
+    "PLOT NUMBER",
+    "PLOT NO",
     "Plot No",
     "Plot No.",
     "plot_number",
@@ -399,6 +415,9 @@ DMNO_ALIASES = [
     "DM No",
     "DM No.",
     "dm_no",
+    "DmNo",
+    "DM NO",
+    "MUNICIPALITY NUMBER",
     "DM Number",
     "DM Number No",
 ]
@@ -410,6 +429,8 @@ DMSUBNO_ALIASES = [
     "DM Sub No.",
     "dm_sub_no",
     "DM Sub Number",
+    "DmSubNo",
+    "DM SUB NO",
 ]
 
 BEDROOM_ALIASES = [
@@ -441,6 +462,8 @@ MOBILE_1_ALIASES = [
     "phone_1",
     "Phone",
     "PHONE",
+    "Mobile",
+    "MOBILE",
     "Telephone",
     "Telephone 1",
     "Contact",
@@ -492,6 +515,24 @@ EMAIL_ALIASES = [
     "Primary Email",
 ]
 
+PROCEDURE_VALUE_ALIASES = [
+    "Procedure Value",
+    "ProcedureValue",
+    "procedure_value",
+    "Price",
+    "price",
+    "PRICE",
+    "Value",
+    "value",
+    "Amount",
+    "amount",
+    "Sale Price",
+    "SalePrice",
+    "Transaction Value",
+    "TransactionValue",
+    "Property Value",
+]
+
 PI_ALIASES = [
     "PI number",
     "PI Number",
@@ -506,6 +547,7 @@ PI_ALIASES = [
 NATIONALITY_ALIASES = [
     "Nationality",
     "nationality",
+    "CountryNameEn",
     "NATIONALITY",
     "Country",
     "Citizenship",
@@ -513,6 +555,7 @@ NATIONALITY_ALIASES = [
 
 PROPERTY_TYPE_ALIASES = [
     "Property Type",
+    "PropertySubTypeNameEn",
     "property_type",
     "Property type",
     "PROPERTY TYPE",
@@ -993,12 +1036,31 @@ def import_one_file(
             # Detect the real header row by looking for known field names.
             header_keywords = {
                 "name",
+                "nameen",
                 "community",
+                "area",
+                "building",
                 "building/cluster",
+                "buildingnameen",
+                "building name",
+                "unit",
                 "unit number",
+                "unitnumber",
+                "flat number",
                 "property type",
+                "propertysubtypenameen",
+                "mobile",
                 "mobile1",
                 "mobile 1",
+                "project",
+                "procedurevalue",
+                "procedure value",
+                "procedurepartytypenameen",
+                "actual area",
+                "plot number",
+                "plot pre reg no",
+                "registration number",
+                "municipality number",
             }
 
             header_row = None
@@ -1019,8 +1081,9 @@ def import_one_file(
                     header_row = candidate_index
                     break
 
-            if header_row is None:
-                header_row = 0
+           if header_row is None:
+                    print("    No recognizable property header - skipped")
+                    continue
 
             # Re-read using the detected header row.
             df = pd.read_excel(
