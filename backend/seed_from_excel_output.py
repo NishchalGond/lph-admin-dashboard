@@ -1080,20 +1080,20 @@ def import_one_file(
                     if normalize_header(keyword) in candidate_values
                 )
 
-                if matches >= 2:
-                    header_row = candidate_index
-                    break
+                    if matches >= 2:
+                        header_row = candidate_index
+                        break
 
-           if header_row is None:
-                    print("    No recognizable property header - skipped")
-                    continue
+                    if header_row is None:
+                        print("    No recognizable property header - skipped")
+                        continue
 
-            # Re-read using the detected header row.
-            df = pd.read_excel(
-                xls,
-                sheet_name=sheet_name,
-                header=header_row,
-            )
+                    # Re-read using the detected header row.
+                    df = pd.read_excel(
+                        xls,
+                        sheet_name=sheet_name,
+                        header=header_row,
+                    )
 
             # Remove completely empty rows/columns.
             df = df.dropna(
