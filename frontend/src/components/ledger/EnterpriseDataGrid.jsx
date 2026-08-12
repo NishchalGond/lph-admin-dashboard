@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, ChevronRight, Eye, Phone, MapPin } from 'lucide-react';
+import { Table, ChevronRight, Eye, Phone, MapPin, Mail } from 'lucide-react';
 import HighlightText from '../ui/HighlightText';
 import Badge from '../ui/Badge';
 import SkeletonTable from '../ui/SkeletonTable';
@@ -8,34 +8,35 @@ import ErrorState from '../ui/ErrorState';
 import LedgerContextMenu from './LedgerContextMenu';
 
 const DEFAULT_VISIBLE_COLUMNS = [
-  'community',
   'name',
+  'email_address',
+  'property_address',
+  'city',
   'mobile_1',
-  'pi_number',
-  'building_cluster',
-  'unit_number',
-  'property_type',
+  'buyer_seller_type',
 ];
 
 const ALL_COLUMNS = [
-  { id: 'community', label: 'Community', minWidth: '240px' },
-  { id: 'name', label: 'Name / Owner Name', minWidth: '240px' },
-  { id: 'mobile_1', label: 'Phone / Mobile', minWidth: '165px' },
-  { id: 'pi_number', label: 'PID / PI Number', minWidth: '135px' },
+  { id: 'name', label: 'Full Name', minWidth: '240px' },
+  { id: 'email_address', label: 'Email', minWidth: '200px' },
+  { id: 'property_address', label: 'Property Address', minWidth: '280px' },
+  { id: 'city', label: 'City', minWidth: '130px' },
+  { id: 'mobile_1', label: 'Mobile', minWidth: '160px' },
+  { id: 'buyer_seller_type', label: 'Customer Type', minWidth: '140px' },
+  { id: 'community', label: 'Community', minWidth: '220px' },
+  { id: 'sub_community', label: 'Sub-Community', minWidth: '160px' },
   { id: 'building_cluster', label: 'Building / Cluster', minWidth: '180px' },
   { id: 'unit_number', label: 'Unit Number', minWidth: '120px' },
   { id: 'property_type', label: 'Property Type', minWidth: '130px' },
-  { id: 'sub_community', label: 'Sub-Community', minWidth: '160px' },
   { id: 'size', label: 'Size (sq ft)', minWidth: '120px' },
   { id: 'plot_reg_no', label: 'Plot Reg No', minWidth: '130px' },
   { id: 'plot_number', label: 'Plot No.', minWidth: '110px' },
   { id: 'dmno', label: 'DMNO', minWidth: '110px' },
   { id: 'dmsubno', label: 'DMsubno', minWidth: '110px' },
   { id: 'bedroom', label: 'Bedrooms', minWidth: '95px' },
-  { id: 'buyer_seller_type', label: 'Buyer/Seller Type', minWidth: '130px' },
   { id: 'mobile_2', label: 'Mobile 2', minWidth: '145px' },
   { id: 'mobile_3', label: 'Mobile 3', minWidth: '145px' },
-  { id: 'email_address', label: 'Email', minWidth: '190px' },
+  { id: 'pi_number', label: 'PID / PI Number', minWidth: '135px' },
   { id: 'nationality', label: 'Nationality', minWidth: '130px' },
   { id: 'procedure_value', label: 'Value (AED)', minWidth: '160px' },
   { id: 'developer', label: 'Developer', minWidth: '150px' },
@@ -68,6 +69,29 @@ const formatPhoneNumber = (phoneStr) => {
   }
 
   return clean;
+};
+
+const formatPropertyAddress = (rec) => {
+  if (!rec) return null;
+  
+  const addr1 = rec.address_1 ? String(rec.address_1).trim() : null;
+  const addr2 = rec.address_2 ? String(rec.address_2).trim() : null;
+
+  if (addr1 && addr2) return `${addr1}, ${addr2}`;
+  if (addr1) return addr1;
+  if (addr2) return addr2;
+
+  // Fallback: Combine unit, building, sub-community, community
+  const locParts = [
+    rec.unit_number ? `Apt ${rec.unit_number}` : null,
+    rec.building_cluster,
+    rec.sub_community,
+    rec.community
+  ].filter(Boolean);
+
+  if (locParts.length > 0) return locParts.join(', ');
+
+  return null;
 };
 
 const EnterpriseDataGrid = ({
@@ -133,7 +157,7 @@ const EnterpriseDataGrid = ({
               ))}
 
               <th scope="col" className={`px-4 pr-6 ${pyClass} text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 sticky top-0 z-30 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-right min-w-[100px]`}>
-                Actions
+                View
               </th>
             </tr>
           </thead>
@@ -141,12 +165,17 @@ const EnterpriseDataGrid = ({
           {/* Table Body */}
           <tbody className="font-medium text-slate-800 dark:text-slate-200">
             {records.map((rec, index) => {
-              const rawOwnerName = rec.name || rec.customer_name;
+              const rawOwnerName = rec.name || rec.customer_name || rec.full_name;
               const ownerName = rawOwnerName ? rawOwnerName.trim() : 'Unspecified Owner';
               const initials = getInitials(ownerName);
               const val = rec.procedure_value ? Number(rec.procedure_value) : null;
               const sizeSqft = rec.size ? Math.round(Number(rec.size)) : null;
               const isEven = index % 2 === 0;
+
+              const primaryMobile = formatPhoneNumber(rec.mobile_1 || rec.mobile_2 || rec.mobile_3);
+              const propertyAddress = formatPropertyAddress(rec);
+              const cityName = rec.city || rec.region || 'Dubai';
+              const customerType = rec.buyer_seller_type || rec.customer_type || rec.status || 'Owner';
 
               return (
                 <tr
@@ -161,18 +190,6 @@ const EnterpriseDataGrid = ({
                     const colId = col.id;
                     const isFirst = idx === 0;
                     const cellPadding = isFirst ? 'pl-6 pr-4' : 'px-4';
-
-                    if (colId === 'community') {
-                      return (
-                        <td key={colId} className={`${cellPadding} ${pyClass} font-semibold text-sky-700 dark:text-sky-400 border-b border-slate-100 dark:border-slate-800/60`}>
-                          {rec.community ? (
-                            <span className="font-bold text-sky-700 dark:text-sky-400">
-                              <HighlightText text={rec.community} highlight={appliedSearch} />
-                            </span>
-                          ) : renderNull()}
-                        </td>
-                      );
-                    }
 
                     if (colId === 'name') {
                       return (
@@ -189,25 +206,69 @@ const EnterpriseDataGrid = ({
                       );
                     }
 
-                    if (colId === 'mobile_1') {
-                      const formattedPhone = formatPhoneNumber(rec.mobile_1);
+                    if (colId === 'email_address') {
                       return (
-                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono text-slate-800 dark:text-slate-200 font-semibold border-b border-slate-100 dark:border-slate-800/60`}>
-                          {formattedPhone ? (
-                            <span className="inline-flex items-center gap-1 text-slate-900 dark:text-white font-bold font-mono">
-                              <HighlightText text={formattedPhone} highlight={appliedSearch} />
+                        <td key={colId} className={`${cellPadding} ${pyClass} text-slate-600 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/60 max-w-[200px] truncate`}>
+                          {rec.email_address ? (
+                            <a
+                              href={`mailto:${rec.email_address}`}
+                              onClick={(e) => e.stopPropagation()}
+                              title={rec.email_address}
+                              className="hover:text-sky-600 dark:hover:text-sky-400 font-medium truncate block hover:underline"
+                            >
+                              <HighlightText text={rec.email_address} highlight={appliedSearch} />
+                            </a>
+                          ) : renderNull()}
+                        </td>
+                      );
+                    }
+
+                    if (colId === 'property_address') {
+                      return (
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-medium text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800/60 max-w-[320px] truncate`}>
+                          {propertyAddress ? (
+                            <span title={propertyAddress} className="truncate block font-semibold text-slate-800 dark:text-slate-200">
+                              <HighlightText text={propertyAddress} highlight={appliedSearch} />
                             </span>
                           ) : renderNull()}
                         </td>
                       );
                     }
 
-                    if (colId === 'pi_number') {
+                    if (colId === 'city') {
                       return (
-                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono font-bold border-b border-slate-100 dark:border-slate-800/60`}>
-                          {rec.pi_number ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/80 font-bold">
-                              <HighlightText text={rec.pi_number} highlight={appliedSearch} />
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/60`}>
+                          <HighlightText text={cityName} highlight={appliedSearch} />
+                        </td>
+                      );
+                    }
+
+                    if (colId === 'mobile_1') {
+                      return (
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono text-slate-800 dark:text-slate-200 font-semibold border-b border-slate-100 dark:border-slate-800/60`}>
+                          {primaryMobile ? (
+                            <span className="inline-flex items-center gap-1 text-slate-900 dark:text-white font-bold font-mono">
+                              <HighlightText text={primaryMobile} highlight={appliedSearch} />
+                            </span>
+                          ) : renderNull()}
+                        </td>
+                      );
+                    }
+
+                    if (colId === 'buyer_seller_type') {
+                      return (
+                        <td key={colId} className={`${cellPadding} ${pyClass} border-b border-slate-100 dark:border-slate-800/60`}>
+                          <Badge status={customerType} color="sky" size="xs" />
+                        </td>
+                      );
+                    }
+
+                    if (colId === 'community') {
+                      return (
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-semibold text-sky-700 dark:text-sky-400 border-b border-slate-100 dark:border-slate-800/60`}>
+                          {rec.community ? (
+                            <span className="font-bold text-sky-700 dark:text-sky-400">
+                              <HighlightText text={rec.community} highlight={appliedSearch} />
                             </span>
                           ) : renderNull()}
                         </td>
@@ -302,14 +363,6 @@ const EnterpriseDataGrid = ({
                       );
                     }
 
-                    if (colId === 'buyer_seller_type') {
-                      return (
-                        <td key={colId} className={`${cellPadding} ${pyClass} border-b border-slate-100 dark:border-slate-800/60`}>
-                          <Badge status={rec.buyer_seller_type || 'Buyer'} size="xs" />
-                        </td>
-                      );
-                    }
-
                     if (colId === 'mobile_2') {
                       const formattedPhone2 = formatPhoneNumber(rec.mobile_2);
                       return (
@@ -328,10 +381,14 @@ const EnterpriseDataGrid = ({
                       );
                     }
 
-                    if (colId === 'email_address') {
+                    if (colId === 'pi_number') {
                       return (
-                        <td key={colId} className={`${cellPadding} ${pyClass} text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60 max-w-[190px] truncate`}>
-                          {rec.email_address ? <HighlightText text={rec.email_address} highlight={appliedSearch} /> : renderNull()}
+                        <td key={colId} className={`${cellPadding} ${pyClass} font-mono font-bold border-b border-slate-100 dark:border-slate-800/60`}>
+                          {rec.pi_number ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/80 font-bold">
+                              <HighlightText text={rec.pi_number} highlight={appliedSearch} />
+                            </span>
+                          ) : renderNull()}
                         </td>
                       );
                     }
@@ -406,6 +463,6 @@ const EnterpriseDataGrid = ({
   );
 };
 
-export { DEFAULT_VISIBLE_COLUMNS, ALL_COLUMNS, formatPhoneNumber };
+export { DEFAULT_VISIBLE_COLUMNS, ALL_COLUMNS, formatPhoneNumber, formatPropertyAddress };
 export default EnterpriseDataGrid;
 

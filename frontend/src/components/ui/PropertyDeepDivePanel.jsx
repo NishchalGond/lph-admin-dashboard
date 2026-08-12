@@ -267,39 +267,55 @@ const PropertyDeepDivePanel = ({ recordId, onClose }) => {
           ) : (
             <div className="p-6">
 
-              {/* All Record Fields Organized into Clear Category Cards */}
+              {/* All Record Fields Organized into 6 Clear Category Sections */}
               {activeTab === 'all' && (
                 <div className="space-y-6">
-                  {/* 1. Owner Profile & Contact Channels */}
+                  {/* 1. Contact Section */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                       <User className="w-4 h-4 text-sky-500" />
                       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        Owner & Contact Details
+                        1. Contact Information
                       </h3>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       <div className="col-span-2 sm:col-span-3">
-                        <InfoCard label="Full Legal Name" value={rec.name || rec.customer_name} />
+                        <InfoCard label="Full Name" value={rec.name || rec.customer_name || rec.full_name} />
                       </div>
-                      <InfoCard label="PI Number / PID" value={rec.pi_number} mono accent />
-                      <InfoCard label="Buyer / Seller Type" value={rec.buyer_seller_type} />
-                      <InfoCard label="Nationality" value={rec.nationality} />
-                      <InfoCard label="Mobile 1" value={formatPhoneNumber(rec.mobile_1)} mono />
-                      <InfoCard label="Mobile 2" value={formatPhoneNumber(rec.mobile_2)} mono />
-                      <InfoCard label="Mobile 3" value={formatPhoneNumber(rec.mobile_3)} mono />
                       <div className="col-span-2 sm:col-span-3">
                         <InfoCard label="Email Address" value={rec.email_address} />
                       </div>
+                      <InfoCard label="Mobile (Primary)" value={formatPhoneNumber(rec.mobile_1)} mono accent />
+                      <InfoCard label="Mobile 2" value={formatPhoneNumber(rec.mobile_2)} mono />
+                      <InfoCard label="Mobile 3" value={formatPhoneNumber(rec.mobile_3)} mono />
                     </div>
                   </div>
 
-                  {/* 2. Property & Location Identifiers */}
+                  {/* 2. Address Section */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                      <MapPin className="w-4 h-4 text-purple-500" />
+                      <MapPin className="w-4 h-4 text-indigo-500" />
                       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        Property & Location Identifiers
+                        2. Address
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="col-span-2 sm:col-span-3">
+                        <InfoCard label="Address 1" value={rec.address_1 || [rec.unit_number ? `Apt ${rec.unit_number}` : null, rec.building_cluster].filter(Boolean).join(', ')} />
+                      </div>
+                      <div className="col-span-2 sm:col-span-3">
+                        <InfoCard label="Address 2" value={rec.address_2 || [rec.sub_community, rec.community].filter(Boolean).join(', ')} />
+                      </div>
+                      <InfoCard label="City" value={rec.city || rec.region || 'Dubai'} />
+                    </div>
+                  </div>
+
+                  {/* 3. Property Section */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <Building2 className="w-4 h-4 text-purple-500" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        3. Property Specifications
                       </h3>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -308,49 +324,65 @@ const PropertyDeepDivePanel = ({ recordId, onClose }) => {
                       <InfoCard label="Building / Cluster" value={rec.building_cluster} />
                       <InfoCard label="Unit Number" value={rec.unit_number} mono accent />
                       <InfoCard label="Property Type" value={rec.property_type} />
-                      <InfoCard label="Bedrooms" value={rec.bedroom} />
                       <InfoCard label="Size" value={rec.size ? `${rec.size} sqft` : null} mono />
-                      <InfoCard label="Plot Reg. No" value={rec.plot_reg_no} mono />
-                      <InfoCard label="Plot Number" value={rec.plot_number} mono />
-                      <InfoCard label="DM No. (DMNO)" value={rec.dmno} mono />
-                      <InfoCard label="DM Sub No. (DMsubno)" value={rec.dmsubno} mono />
+                      <InfoCard label="Bedrooms" value={rec.bedroom} />
                     </div>
                   </div>
 
-                  {/* 3. Valuation & Project Specs */}
+                  {/* 4. Registration Section */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <Hash className="w-4 h-4 text-amber-500" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        4. Registration & Regulatory Identifiers
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <InfoCard label="PID / PI Number" value={rec.pi_number} mono accent />
+                      <InfoCard label="Plot Registration Number" value={rec.plot_reg_no} mono />
+                      <InfoCard label="Plot Number" value={rec.plot_number} mono />
+                      <InfoCard label="DM Number" value={rec.dmno} mono />
+                      <InfoCard label="DM Sub Number" value={rec.dmsubno} mono />
+                    </div>
+                  </div>
+
+                  {/* 5. Transaction & Ownership Section */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                       <DollarSign className="w-4 h-4 text-emerald-500" />
                       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        Valuation & Development Specs
+                        5. Transaction & Ownership
                       </h3>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <InfoCard label="Customer Type" value={rec.buyer_seller_type || rec.customer_type || rec.status} />
+                      <InfoCard label="Buyer / Seller Role" value={rec.buyer_seller_type} />
                       <div className="col-span-2 sm:col-span-3 p-4 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40">
                         <span className="block text-[10px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Procedure Value</span>
                         <span className="block text-2xl font-black font-mono text-emerald-800 dark:text-emerald-300 mt-0.5">
                           {rec.procedure_value ? `AED ${Number(rec.procedure_value).toLocaleString()}` : 'Unstated'}
                         </span>
                       </div>
-                      <InfoCard label="Developer" value={rec.developer} />
-                      <InfoCard label="Project" value={rec.project} />
                       <InfoCard label="Registration Date" value={rec.date ? new Date(rec.date).toLocaleDateString('en-AE', { year: 'numeric', month: 'short', day: '2-digit' }) : null} />
                     </div>
                   </div>
 
-                  {/* 4. Ingestion Lineage & Source Workbook */}
+                  {/* 6. Additional Information Section */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                      <FileSpreadsheet className="w-4 h-4 text-amber-500" />
+                      <FileSpreadsheet className="w-4 h-4 text-blue-500" />
                       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        Source Ingestion Lineage
+                        6. Additional Information & Data Lineage
                       </h3>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <InfoCard label="Nationality" value={rec.nationality} />
+                      <InfoCard label="Developer" value={rec.developer} />
+                      <InfoCard label="Project" value={rec.project} />
                       <div className="col-span-2 sm:col-span-3">
-                        <InfoCard label="Original Workbook File" value={rec.original_workbook} mono />
+                        <InfoCard label="Source Workbook File" value={rec.original_workbook} mono />
                       </div>
-                      <InfoCard label="Sheet Name" value={rec.sheet_name} />
+                      <InfoCard label="Source Sheet" value={rec.sheet_name} />
                       <InfoCard label="Row Index" value={rec.row_number ? `#${rec.row_number}` : null} mono />
                       <InfoCard label="Batch Number" value={data?.batch ? `#${data.batch.batch_number}` : null} mono />
                     </div>
