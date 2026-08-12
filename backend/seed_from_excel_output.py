@@ -6,7 +6,7 @@ import argparse
 import re
 import unicodedata
 from datetime import datetime, timezone
-
+    
 import pandas as pd
 from sqlalchemy import func
 from sqlalchemy.orm import Session
