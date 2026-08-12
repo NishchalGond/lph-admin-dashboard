@@ -452,6 +452,9 @@ BUYER_SELLER_ALIASES = [
     "buyer_seller_type",
     "Transaction Type",
     "Buyer or Seller",
+    "ProcedurePartyTypeNameEn",
+    "Procedure Party Type",
+    "ProcedurePartyType",
 ]
 
 MOBILE_1_ALIASES = [
