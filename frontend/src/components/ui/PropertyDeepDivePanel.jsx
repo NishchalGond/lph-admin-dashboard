@@ -14,6 +14,7 @@ import Badge from './Badge';
    Tab definitions
 ──────────────────────────────────────────── */
 const TABS = [
+  { id: 'all',       label: 'All Details', icon: Layers           },
   { id: 'property',  label: 'Property',   icon: Building2      },
   { id: 'owner',     label: 'Owner',       icon: User           },
   { id: 'financial', label: 'Financials',  icon: DollarSign     },
@@ -65,7 +66,7 @@ const PropertyDeepDivePanel = ({ recordId, onClose }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('property');
+  const [activeTab, setActiveTab] = useState('all');
   const [copied, setCopied] = useState(false);
 
   const fetchRecord = useCallback(() => {
@@ -264,6 +265,97 @@ const PropertyDeepDivePanel = ({ recordId, onClose }) => {
             </div>
           ) : (
             <div className="p-6">
+
+              {/* All Record Fields Organized into Clear Category Cards */}
+              {activeTab === 'all' && (
+                <div className="space-y-6">
+                  {/* 1. Owner Profile & Contact Channels */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <User className="w-4 h-4 text-sky-500" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        Owner & Contact Details
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="col-span-2 sm:col-span-3">
+                        <InfoCard label="Full Legal Name" value={rec.name || rec.customer_name} />
+                      </div>
+                      <InfoCard label="PI Number / PID" value={rec.pi_number} mono accent />
+                      <InfoCard label="Buyer / Seller Type" value={rec.buyer_seller_type} />
+                      <InfoCard label="Nationality" value={rec.nationality} />
+                      <InfoCard label="Mobile 1" value={rec.mobile_1} mono />
+                      <InfoCard label="Mobile 2" value={rec.mobile_2} mono />
+                      <InfoCard label="Mobile 3" value={rec.mobile_3} mono />
+                      <div className="col-span-2 sm:col-span-3">
+                        <InfoCard label="Email Address" value={rec.email_address} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Property & Location Identifiers */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <MapPin className="w-4 h-4 text-purple-500" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        Property & Location Identifiers
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <InfoCard label="Community" value={rec.community} />
+                      <InfoCard label="Sub-Community" value={rec.sub_community} />
+                      <InfoCard label="Building / Cluster" value={rec.building_cluster} />
+                      <InfoCard label="Unit Number" value={rec.unit_number} mono accent />
+                      <InfoCard label="Property Type" value={rec.property_type} />
+                      <InfoCard label="Bedrooms" value={rec.bedroom} />
+                      <InfoCard label="Size" value={rec.size ? `${rec.size} sqft` : null} mono />
+                      <InfoCard label="Plot Reg. No" value={rec.plot_reg_no} mono />
+                      <InfoCard label="Plot Number" value={rec.plot_number} mono />
+                      <InfoCard label="DM No. (DMNO)" value={rec.dmno} mono />
+                      <InfoCard label="DM Sub No. (DMsubno)" value={rec.dmsubno} mono />
+                    </div>
+                  </div>
+
+                  {/* 3. Valuation & Project Specs */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <DollarSign className="w-4 h-4 text-emerald-500" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        Valuation & Development Specs
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="col-span-2 sm:col-span-3 p-4 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40">
+                        <span className="block text-[10px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Procedure Value</span>
+                        <span className="block text-2xl font-black font-mono text-emerald-800 dark:text-emerald-300 mt-0.5">
+                          {rec.procedure_value ? `AED ${Number(rec.procedure_value).toLocaleString()}` : 'Unstated'}
+                        </span>
+                      </div>
+                      <InfoCard label="Developer" value={rec.developer} />
+                      <InfoCard label="Project" value={rec.project} />
+                      <InfoCard label="Registration Date" value={rec.date ? new Date(rec.date).toLocaleDateString('en-AE', { year: 'numeric', month: 'short', day: '2-digit' }) : null} />
+                    </div>
+                  </div>
+
+                  {/* 4. Ingestion Lineage & Source Workbook */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <FileSpreadsheet className="w-4 h-4 text-amber-500" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        Source Ingestion Lineage
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="col-span-2 sm:col-span-3">
+                        <InfoCard label="Original Workbook File" value={rec.original_workbook} mono />
+                      </div>
+                      <InfoCard label="Sheet Name" value={rec.sheet_name} />
+                      <InfoCard label="Row Index" value={rec.row_number ? `#${rec.row_number}` : null} mono />
+                      <InfoCard label="Batch Number" value={data?.batch ? `#${data.batch.batch_number}` : null} mono />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Property & Unit Info */}
               {activeTab === 'property' && (

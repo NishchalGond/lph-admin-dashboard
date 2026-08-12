@@ -4,7 +4,7 @@ import RecordHeader from '../components/ledger/RecordHeader';
 import LedgerStatsOverview from '../components/ledger/LedgerStatsOverview';
 import HeroAISearchBar from '../components/ledger/HeroAISearchBar';
 import EnterpriseFilterBar from '../components/ledger/EnterpriseFilterBar';
-import EnterpriseDataGrid, { ALL_COLUMNS } from '../components/ledger/EnterpriseDataGrid';
+import EnterpriseDataGrid, { DEFAULT_VISIBLE_COLUMNS, ALL_COLUMNS } from '../components/ledger/EnterpriseDataGrid';
 import ColumnManagerModal from '../components/ledger/ColumnManagerModal';
 import ExportCenterModal from '../components/ledger/ExportCenterModal';
 import PropertyDeepDivePanel from '../components/ui/PropertyDeepDivePanel';
@@ -31,7 +31,7 @@ const RecordExplorer = () => {
   const [activeSort, setActiveSort] = useState('id_desc');
 
   // Layout & UI Customization States
-  const [visibleColumns, setVisibleColumns] = useState(ALL_COLUMNS.map(c => c.id));
+  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS);
   const [density, setDensity] = useState('comfortable'); // 'compact' | 'comfortable' | 'spacious'
   const [activePreset, setActivePreset] = useState('all');
 
@@ -253,8 +253,8 @@ const RecordExplorer = () => {
           visibleColumns={visibleColumns}
           onToggleColumn={handleToggleColumn}
           onSelectAll={() => setVisibleColumns(ALL_COLUMNS.map(c => c.id))}
-          onHideAll={() => setVisibleColumns(['name', 'unit_number'])}
-          onResetDefaults={() => setVisibleColumns(ALL_COLUMNS.map(c => c.id))}
+          onHideAll={() => setVisibleColumns(DEFAULT_VISIBLE_COLUMNS)}
+          onResetDefaults={() => setVisibleColumns(DEFAULT_VISIBLE_COLUMNS)}
           onClose={() => setShowColumnManager(false)}
         />
       )}
